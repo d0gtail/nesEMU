@@ -62,6 +62,14 @@ private:
 	uint8_t read(uint16_t addr);
 
 	/*
+	 * If read location is provided immediately as part of the instruction
+	 * the data must be fetched. This decision is dependent on the Address Mode
+	 * in the instruction byte
+	 */
+	uint8_t fetch();
+
+private:
+	/*
 	 * Addressing Modes
 	 * 6502 uses different addressing modes
 	 * each opcode contains information about the addressing mode
@@ -99,6 +107,7 @@ private:
 
 	uint8_t XXX(); // illegal opcode
 
+private:
 	// convenience methods to access status register
 	uint8_t GetFlag(FLAGS6502 f);
 	void	SetFlag(FLAGS6502 f, bool v);
