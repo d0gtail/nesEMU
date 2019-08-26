@@ -62,6 +62,17 @@ private:
 	uint8_t read(uint16_t addr);
 
 	/*
+	 * Assisting variables in the CPU
+	 */
+	uint8_t fetched 		= 0x00;		// Date which is fetched
+	uint16_t temp			= 0x0000;	// For convenience reasons
+	uint16_t addr_abs		= 0x0000;	// Used memory addresses
+	uint16_t addr_rel		= 0x00;		// Absolute address following a branch
+	uint8_t	opcode			= 0x00;		// Instruction byte
+	uint8_t	cycles			= 0;		// Counts the instructions remaining cycles
+	uint32_t clock_count 	= 0;		// Global accumulation of clocks cycles
+
+	/*
 	 * If read location is provided immediately as part of the instruction
 	 * the data must be fetched. This decision is dependent on the Address Mode
 	 * in the instruction byte
