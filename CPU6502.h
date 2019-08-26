@@ -85,7 +85,7 @@ private:
 	 * which are stored in a numerical order what makes them easy to look up.
 	 */
 	struct INSTRUCTION {
-		std::string name; // Pneumonic: Text representation of the instruction (For disassembling)
+		std::string name; // Mnemonic: Text representation of the instruction (For disassembling)
 		uint8_t (CPU6502::*operate )(void) = nullptr; // Function Pointer to the implementation of the opcode
 		uint8_t (CPU6502::*addrmode)(void) = nullptr; // Function Pointer to the address mode
 		uint8_t cycles = 0;	// Cycles which the CPU requires to perform the instruction
