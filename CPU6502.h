@@ -11,6 +11,7 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
 
 class Bus;
 
@@ -78,6 +79,18 @@ private:
 	 * in the instruction byte
 	 */
 	uint8_t fetch();
+
+	/*
+	 * Structure to save the opcode translation table. The 6502 CPU can have 256 instructions
+	 * which are stored in a numerical order what makes them easy to look up.
+	 */
+	struct INSTRUCTION {
+		std::string name; // Pneumonic: Text representation of the instruction (For disassembling)
+		uint8_t (CPU6502::*operate )(void) = nullptr; // Function Pointer to the implementation of the opcode
+		uint8_t (CPU6502::*addrmode)(void) = nullptr; // Function Pointer to the address mode
+		uint8_t cycles = 0;	// Cycles which the CPU requires to perform the instruction
+	};
+	std::vector<INSTRUCTION> lookup;
 
 private:
 	/*
