@@ -83,6 +83,8 @@ private:
 	uint8_t TAX(); uint8_t TAY(); uint8_t TSX(); uint8_t TXA(); uint8_t TXS();
 	uint8_t TYA();
 
+	uint8_t XXX(); // illegal opcode
+
 	// convenience methods to access status register
 	uint8_t GetFlag(FLAGS6502 f);
 	void	SetFlag(FLAGS6502 f, bool v);
