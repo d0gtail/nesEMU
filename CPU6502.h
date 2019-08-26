@@ -21,6 +21,9 @@ public:
 
 	void ConnectBus(Bus *n ) { bus = n;}
 
+	/*
+	 * Status Register stores 8 Flags
+	 */
 	enum FLAGS6502 { // CPU Flags
 		C = (1 << 0),	// Carry Bit
 		Z = (1 << 1),	// Zero
@@ -32,12 +35,23 @@ public:
 		N = (1 << 7),	// Negative
 	};
 
+	/*
+	 * CPU Core Registers
+	 */
 	uint8_t status = 0x00; 	// Status Register
 	uint8_t a = 0x00;		// Accumulator Register
 	uint8_t x = 0x00;		// X Register
 	uint8_t y = 0x00;		// Y Register
 	uint8_t stkp = 0x00;	// Stack Pointer
 	uint16_t pc = 0x0000;	// Program Counter
+
+	/*
+	 * external event methods
+	 */
+	void reset();	// Reset irq to bring the cpu into a known state
+	void irq();		// Interrupt Request - executes an instruction at a specific location
+	void nmi();		// Non-Maskable Interrupt Request - as IRQ but can't be disabled
+	void clock();	// perform one clock cycle
 
 
 
