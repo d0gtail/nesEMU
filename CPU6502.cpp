@@ -103,3 +103,13 @@ uint8_t CPU6502::IMP() {
 	fetched = a; // storing the accumulator register in fetched
 	return 0; // no additional cycle needed
 }
+
+/*
+ * Addr. Mode: Immediate
+ * The instruction expects the next byte as value so we set the read address to point to the
+ * next byte
+ */
+uint8_t CPU6502::IMM(){
+	addr_abs = ++pc;
+	return 0;
+}
