@@ -53,3 +53,30 @@ void CPU6502::write(uint16_t addr, uint8_t data) {
 uint8_t CPU6502::read(uint16_t addr) {
 	return bus->read(addr, false);
 }
+
+void CPU6502::clock() {
+	/*
+	 * If the clock gets triggered we only going to perform any kind of operation
+	 * when there are no cycles left from the last operation. Since we don't need
+	 * to be that precise and modern computers are way faster than this old CPU we
+	 * simply tick the leftover cycles down by doing nothing here.
+	 */
+	if(cycles == 0) {
+
+		// read instruction byte at the program counter
+		// and look it up in the translation table to see what the opcode has to do
+		opcode = read(pc);
+		// instruction has been read, incremet the program counter
+		++pc;
+		// get initial number of needed cycles
+		cycles = lookup[opcode].cycles;
+		// fetch data using the underlying addressing mode and store additional cycles
+		uint8_t additionalCyleAddrMode = (this->*lookup[opcode].addrmode)();
+		// perform the operation and again store more additional cycles
+		uint8_t additionalCyclesOperation = (this->*lookup[opcode].operate)();
+		// calculate overall cycles
+		cycles += (additionalCyleAddrMode & additionalCyclesOperation);
+	}
+	// decrement the cycles since we performed the operation
+	--cycles;
+}
