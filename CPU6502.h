@@ -38,7 +38,7 @@ public:
 	};
 
 	/*
-	 * CPU Core Registers
+	 * CPU Core Registers exposed to public for easy access
 	 */
 	uint8_t status = 0x00; 	// Status Register
 	uint8_t a = 0x00;		// Accumulator Register
@@ -66,7 +66,7 @@ private:
 	/*
 	 * Assisting variables in the CPU
 	 */
-	uint8_t fetched 		= 0x00;		// Date which is fetched
+	uint8_t fetched 		= 0x00;		// Date which is fetched and used for the ALU
 	uint16_t temp			= 0x0000;	// For convenience reasons
 	uint16_t addr_abs		= 0x0000;	// Used memory addresses
 	uint16_t addr_rel		= 0x00;		// Absolute address following a branch

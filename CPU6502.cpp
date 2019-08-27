@@ -80,3 +80,26 @@ void CPU6502::clock() {
 	// decrement the cycles since we performed the operation
 	--cycles;
 }
+
+/*
+ * Addressing Modes:
+ *
+ * The 6502 has an address range from 0x0000 - 0xFFFF. The high byte refers as "page" and
+ * the low byte is the offset to that "page" which implies that there are 256 pages containing
+ * 256 bytes each.
+ *
+ * Several Addressing Mode have the potential to need an additional clock cycle if they cross
+ * "page" boundary. This combined with several instructions that enable this additional clock
+ * cycle. Each address function returns a Flag indicating the potential to need an additional
+ * cycle so does each instruction. If both of them return 1 as Flag an additional clock cycle
+ * is required
+ */
+
+/* Addr. Mode: Implied
+ * Doesn't need additional data. Does very simple tasks like setting an status bit. However,
+ * we will use the accumulator for instructions like PHA.
+ */
+uint8_t CPU6502::IMP() {
+	fetched = a; // storing the accumulator register in fetched
+	return 0; // no additional cycle needed
+}
