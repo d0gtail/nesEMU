@@ -109,7 +109,7 @@ uint8_t CPU6502::IMP() {
  * next byte
  */
 uint8_t CPU6502::IMM(){
-	addr_abs = ++pc; // TODO: check if this is right or pc++
+	addr_abs = pc++;
 	return 0;
 }
 /*
@@ -144,3 +144,39 @@ uint8_t CPU6502::ZPY() {
 	addr_abs &= 0x00FF;
 	return 0;
 }
+/*
+ * Addr. Mode: Absolute
+ * Full 16-Bit address is used
+ */
+uint8_t CPU6502::ABS() {
+	uint16_t loByte = read(pc);
+	++pc;
+	uint16_t hiByte = read(pc);
+	++pc;
+	addr_abs = ((hiByte << 8) | loByte);
+	return 0;
+}
+/*
+ * Addr. Mode: Absolute with X Offset
+ * Same as Absolute address mode but with the content of the
+ * X Register added. If the resulting address changes the page,
+ * an additional clock cycle is required
+ */
+uint8_t CPU6502::ABX() {
+	uint16_t loByte = read(pc);
+	++pc;
+	uint16_t hiByte = read(pc);
+	++pc;
+	addr_abs = ((hiByte << 8) | loByte);
+	addr_abs += x;
+
+	// hiByte shifted by 8 to the left represents the page index
+	// if the resulting high part of addr_abs isn't the same as the high byte
+	// the page index has changed so we have throw an extra clock cycle in the equation
+	if((addr_abs & 0xFF00) != (hiByte << 8)) {
+		return 1;
+	}else{
+		return 0;
+	}
+}
+
