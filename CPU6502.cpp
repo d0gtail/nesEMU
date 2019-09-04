@@ -183,7 +183,7 @@ uint8_t CPU6502::ABX() {
 	uint16_t hiByte = read(pc);
 	++pc;
 	addr_abs = ((hiByte << 8) | loByte);
-	addr_abs += x;
+	addr_abs += this->x;
 
 	// hiByte shifted by 8 to the left represents the page index
 	// if the resulting high part of addr_abs isn't the same as the high byte
@@ -204,7 +204,7 @@ uint8_t CPU6502::ABY() {
 	uint16_t hiByte = read(pc);
 	++pc;
 	addr_abs = ((hiByte << 8) | loByte);
-	addr_abs += y;
+	addr_abs += this->y;
 
 	// hiByte shifted by 8 to the left represents the page index
 	// if the resulting high part of addr_abs isn't the same as the high byte
@@ -250,8 +250,8 @@ uint8_t CPU6502::IZX() {
 	uint16_t temp = read(pc);
 	++pc;
 
-	uint16_t ptrHi = read((uint16_t)(temp + (uint16_t)x) & 0x00FF);
-	uint16_t ptrLo = read((uint16_t)(temp + (uint16_t)x + 1) & 0x00FF);
+	uint16_t ptrHi = read((uint16_t)(temp + (uint16_t)this->x) & 0x00FF);
+	uint16_t ptrLo = read((uint16_t)(temp + (uint16_t)this->x + 1) & 0x00FF);
 
 	addr_abs = ((ptrHi << 8) | ptrLo);
 
@@ -272,11 +272,31 @@ uint8_t CPU6502::IZY() {
 	uint16_t ptrHi = read((temp + 1) & 0x00FF);
 
 	addr_abs = ((ptrHi << 8) | ptrLo);
-	addr_abs += y;
+	addr_abs += this->y;
 
 	if((addr_abs & 0xFF00) != (ptrHi << 8)) {
 		return 1;
 	}else{
 		return 0;
 	}
+}
+
+/*
+ * Instructions: fetched
+ *
+ * This function grabs data used by the instruction into a
+ * convenient variable. Some instructions don't have to fetch
+ * data as it's implied by the instruction. E.g. "INX"
+ * increments the X Register, where no additional data is
+ * required. For all other addressing modes the data is located
+ * where addr_abs points to so it's read from there. Immidiate
+ * address mode exploits this slightly, as that has the data at pc + 1
+ * so it fetches the data from the next byte.
+ *
+ */
+uint8_t CPU6502::fetch() {
+	if(!(lookup[opcode].addrmode == &CPU6502::IMP())) {
+		this->fetched = read(addr_abs);
+	}
+	return this->fetched;
 }
