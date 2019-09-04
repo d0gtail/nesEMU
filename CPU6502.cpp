@@ -145,6 +145,21 @@ uint8_t CPU6502::ZPY() {
 	return 0;
 }
 /*
+ * Addr. Mode: Relative
+ * Exclusive for branch instructions. The address must be within
+ * -128 to +127 of the branching instruction. It cannot be branched
+ * to any address in the addressable range directly.
+ */
+uint8_t CPU6502::REL() {
+	addr_rel = read(pc);
+	++pc;
+	if(addr_rel & 0x80) { // check if address is signed
+		addr_rel |= 0xFF00;
+	}
+	return 0;
+}
+
+/*
  * Addr. Mode: Absolute
  * Full 16-Bit address is used
  */
@@ -179,4 +194,89 @@ uint8_t CPU6502::ABX() {
 		return 0;
 	}
 }
+/*
+ * Addr. Mode: Absolute with Y Offset
+ * Same as ABX but with the Y Register
+ */
+uint8_t CPU6502::ABY() {
+	uint16_t loByte = read(pc);
+	++pc;
+	uint16_t hiByte = read(pc);
+	++pc;
+	addr_abs = ((hiByte << 8) | loByte);
+	addr_abs += y;
 
+	// hiByte shifted by 8 to the left represents the page index
+	// if the resulting high part of addr_abs isn't the same as the high byte
+	// the page index has changed so we have throw an extra clock cycle in the equation
+	if((addr_abs & 0xFF00) != (hiByte << 8)) {
+		return 1;
+	}else{
+		return 0;
+	}
+}
+// Next 3 address modes use indirection (aka Pointers)
+/*
+ * Addr. Mode: Indirect Addressing
+ * 16-Bit Address supplied which is a pointer which has to be dereferenced.
+ * In the hardware this instruction has a bug and to emulate this function correct we
+ * need to emulate this bug.
+ * If the low byte of the supplied address is 0xFF, then to read the high byte of the
+ * actual address we need to cross a page boundary. This doesn't actually happen on the
+ * chip as designed, instead it wraps back around in the same page, yielding an invalid
+ * actual address
+ */
+uint8_t CPU6502::IND() {
+	uint16_t ptrLo = read(pc);
+	++pc;
+	uint16_t ptrHi = read(pc);
+	++pc;
+
+	uint16_t ptr = ((ptrHi << 8) | ptrLo);
+
+	if(ptrLo == 0x00FF) {// Simulate page boundary hardware bug
+		addr_abs = (read(ptr & 0xFF00) << 8 | read(ptr + 0));
+	}else{ // Behave normally
+		addr_abs = (read(ptr + 1) << 8 | read(ptr + 0));
+	}
+	return 0;
+}
+/*
+ * Addr. Mode: Indirect X
+ * Supplied 8-Bit Address is offset by X Register to index a location
+ * in page 0x00. The actual 16-Bit Address is read from this location
+ */
+uint8_t CPU6502::IZX() {
+	uint16_t temp = read(pc);
+	++pc;
+
+	uint16_t ptrHi = read((uint16_t)(temp + (uint16_t)x) & 0x00FF);
+	uint16_t ptrLo = read((uint16_t)(temp + (uint16_t)x + 1) & 0x00FF);
+
+	addr_abs = ((ptrHi << 8) | ptrLo);
+
+	return 0;
+}
+/*
+ * Addr. Mode: Indirect Y
+ * The supplied 8-Bit address indexes a location in page 0x00.
+ * From there the actual 16-Bit address is read, and the contents
+ * of Y Register is added to it as offset. If the offset causes a change
+ * in page then an additional clock cycle is needed.
+ */
+uint8_t CPU6502::IZY() {
+	uint16_t temp = read(pc);
+	++pc;
+
+	uint16_t ptrLo = read(temp & 0x00FF);
+	uint16_t ptrHi = read((temp + 1) & 0x00FF);
+
+	addr_abs = ((ptrHi << 8) | ptrLo);
+	addr_abs += y;
+
+	if((addr_abs & 0xFF00) != (ptrHi << 8)) {
+		return 1;
+	}else{
+		return 0;
+	}
+}
