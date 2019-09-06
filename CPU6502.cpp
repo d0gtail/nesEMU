@@ -300,3 +300,16 @@ uint8_t CPU6502::fetch() {
 	}
 	return this->fetched;
 }
+/*
+ * Instruction: AND
+ * Bitwise logic and
+ * Function:	A = A & M
+ * Flags Out:	N, Z
+ */
+uint8_t CPU6502::AND() {
+	fetch(); // first fetch the data and store it in fetched
+	this->a = this->a & this->fetched; // and the data with the accumulator and store it in the accu.
+	SetFlag(Z, this->a == 0x00);
+	SetFlag(N, a & 0x80);
+	return 1; // potential candidate to add additional clock cycle
+}
