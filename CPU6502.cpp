@@ -295,7 +295,7 @@ uint8_t CPU6502::IZY() {
  *
  */
 uint8_t CPU6502::fetch() {
-	if(!(lookup[opcode].addrmode == &CPU6502::IMP())) {
+	if(!(lookup[opcode].addrmode == &CPU6502::IMP)) {
 		this->fetched = read(addr_abs);
 	}
 	return this->fetched;
@@ -312,4 +312,21 @@ uint8_t CPU6502::AND() {
 	SetFlag(Z, this->a == 0x00);
 	SetFlag(N, a & 0x80);
 	return 1; // potential candidate to add additional clock cycle
+}
+/*
+ * Instruction: BCS
+ * Branch when Carry is Set
+ * Function:	if(c==1) pc = address
+ */
+uint8_t CPU6502::BCS() {
+	if(this->GetFlag(C) == 1) {
+		++cycles;
+		addr_abs = pc + addr_rel;
+
+		if((addr_abs & 0xFF00) != (pc & 0xFF00)) {
+			++cycles;
+		}
+		pc = addr_abs;
+	}
+	return 0;
 }
