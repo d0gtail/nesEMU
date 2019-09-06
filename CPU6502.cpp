@@ -80,7 +80,24 @@ void CPU6502::clock() {
 	// decrement the cycles since we performed the operation
 	--cycles;
 }
-
+/*
+ * FLAG FUNCTIONS:
+ *
+ * GetFlag: Returns the value of a specific Bit of the status register
+ */
+uint8_t CPU6502::GetFlag(FLAGS6502 f) {
+	return ((status & f) > 0) ? 1 : 0;
+}
+/*
+ * SetFlag: Sets of clears a specific Bit of the status register
+ */
+void CPU6502::SetFlag(FLAGS6502 f, bool v) {
+	if(v) {
+		status |= f;
+	}else{
+		status &= ~f;
+	}
+}
 /*
  * Addressing Modes:
  *
