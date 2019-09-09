@@ -11,6 +11,8 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
+#include <string>
 
 class Bus;
 
@@ -21,6 +23,9 @@ public:
 
 	void ConnectBus(Bus *n ) { bus = n;}
 
+	/*
+	 * Status Register stores 8 Flags
+	 */
 	enum FLAGS6502 { // CPU Flags
 		C = (1 << 0),	// Carry Bit
 		Z = (1 << 1),	// Zero
@@ -32,12 +37,23 @@ public:
 		N = (1 << 7),	// Negative
 	};
 
+	/*
+	 * CPU Core Registers exposed to public for easy access
+	 */
 	uint8_t status = 0x00; 	// Status Register
 	uint8_t a = 0x00;		// Accumulator Register
 	uint8_t x = 0x00;		// X Register
 	uint8_t y = 0x00;		// Y Register
 	uint8_t stkp = 0x00;	// Stack Pointer
 	uint16_t pc = 0x0000;	// Program Counter
+
+	/*
+	 * external event methods
+	 */
+	void reset();	// Reset irq to bring the cpu into a known state
+	void irq();		// Interrupt Request - executes an instruction at a specific location
+	void nmi();		// Non-Maskable Interrupt Request - as IRQ but can't be disabled
+	void clock();	// perform one clock cycle
 
 
 
@@ -47,6 +63,37 @@ private:
 	void write(uint16_t addr, uint8_t data);
 	uint8_t read(uint16_t addr);
 
+	/*
+	 * Assisting variables in the CPU
+	 */
+	uint8_t fetched 		= 0x00;		// Date which is fetched and used for the ALU
+	uint16_t temp			= 0x0000;	// For convenience reasons
+	uint16_t addr_abs		= 0x0000;	// Used memory addresses
+	uint16_t addr_rel		= 0x00;		// Absolute address following a branch
+	uint8_t	opcode			= 0x00;		// Instruction byte
+	uint8_t	cycles			= 0;		// Counts the instructions remaining cycles
+	uint32_t clock_count 	= 0;		// Global accumulation of clocks cycles
+
+	/*
+	 * If read location is provided immediately as part of the instruction
+	 * the data must be fetched. This decision is dependent on the Address Mode
+	 * in the instruction byte
+	 */
+	uint8_t fetch();
+
+	/*
+	 * Structure to save the opcode translation table. The 6502 CPU can have 256 instructions
+	 * which are stored in a numerical order what makes them easy to look up.
+	 */
+	struct INSTRUCTION {
+		std::string name; // Mnemonic: Text representation of the instruction (For disassembling)
+		uint8_t (CPU6502::*operate )(void) = nullptr; // Function Pointer to the implementation of the opcode
+		uint8_t (CPU6502::*addrmode)(void) = nullptr; // Function Pointer to the address mode
+		uint8_t cycles = 0;	// Cycles which the CPU requires to perform the instruction
+	};
+	std::vector<INSTRUCTION> lookup;
+
+private:
 	/*
 	 * Addressing Modes
 	 * 6502 uses different addressing modes
@@ -83,6 +130,9 @@ private:
 	uint8_t TAX(); uint8_t TAY(); uint8_t TSX(); uint8_t TXA(); uint8_t TXS();
 	uint8_t TYA();
 
+	uint8_t XXX(); // illegal opcode
+
+private:
 	// convenience methods to access status register
 	uint8_t GetFlag(FLAGS6502 f);
 	void	SetFlag(FLAGS6502 f, bool v);
