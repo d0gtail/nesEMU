@@ -64,6 +64,7 @@ private:
 	uint8_t read(uint16_t addr);
 
 	/*
+<<<<<<< HEAD
 	 * Assisting variables in the CPU
 	 */
 	uint8_t fetched 		= 0x00;		// Date which is fetched and used for the ALU
@@ -95,6 +96,8 @@ private:
 
 private:
 	/*
+=======
+>>>>>>> c87b19f47e435ef093ce9a5511d64721e4017524
 	 * Addressing Modes
 	 * 6502 uses different addressing modes
 	 * each opcode contains information about the addressing mode
