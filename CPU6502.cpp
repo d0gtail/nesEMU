@@ -433,6 +433,24 @@ uint8_t CPU6502::BPL() {
 	return 0;
 }
 /*
+ * Instruction: BVC
+ * Branch if Overflow is Clear
+ * Function:	if(V == 0) pc = address
+ */
+uint8_t CPU6502::BVC() {
+	if(this->GetFlag(V) == 0) {
+		++cycles;
+		addr_abs = pc + addr_rel;
+
+		if((addr_abs & 0xFF00) != (pc & 0xFF00)) {
+			++cycles;
+		}
+		pc = addr_abs;
+	}
+	return 0;
+}
+
+/*
  * Instruction: CLC
  * Clear carry Flag
  * Function:	C = 0;
