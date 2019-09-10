@@ -331,12 +331,46 @@ uint8_t CPU6502::AND() {
 	return 1; // potential candidate to add additional clock cycle
 }
 /*
+ * Instruction: BCC
+ * Branch when Carry is Clear
+ * Function:	if(c==0) pc = address
+ */
+uint8_t CPU6502::BCC() {
+	if(this->GetFlag(C) == 0) {
+		++cycles; // add one additional cycle if branch to the same page (so at least one has to be added)
+		addr_abs = pc + addr_rel;
+
+		if((addr_abs & 0xFF00) != (pc & 0xFF00)) {
+			++cycles; // add another clock cycle if page boundarys are crossed
+		}
+		pc = addr_abs;
+	}
+	return 0;
+}
+/*
  * Instruction: BCS
  * Branch when Carry is Set
  * Function:	if(c==1) pc = address
  */
 uint8_t CPU6502::BCS() {
 	if(this->GetFlag(C) == 1) {
+		++cycles;
+		addr_abs = pc + addr_rel;
+
+		if((addr_abs & 0xFF00) != (pc & 0xFF00)) {
+			++cycles;
+		}
+		pc = addr_abs;
+	}
+	return 0;
+}
+/*
+ * Instruction: BEQ
+ * Branch if Equal
+ * Function:	if(Z == 1) pc = address
+ */
+uint8_t CPU6502::BEQ() {
+	if(this->GetFlag(Z) == 1) {
 		++cycles;
 		addr_abs = pc + addr_rel;
 
