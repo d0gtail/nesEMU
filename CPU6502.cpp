@@ -365,12 +365,63 @@ uint8_t CPU6502::BCS() {
 	return 0;
 }
 /*
+ * Instruction: BNE
+ * Branch not Equal
+ * Function:	if(Z == 0) pc = address
+ */
+uint8_t CPU6502::BNE() {
+	if(this->GetFlag(Z) == 0) {
+		++cycles;
+		addr_abs = pc + addr_rel;
+
+		if((addr_abs & 0xFF00) != (pc & 0xFF00)) {
+			++cycles;
+		}
+		pc = addr_abs;
+	}
+	return 0;
+}
+/*
  * Instruction: BEQ
  * Branch if Equal
  * Function:	if(Z == 1) pc = address
  */
 uint8_t CPU6502::BEQ() {
 	if(this->GetFlag(Z) == 1) {
+		++cycles;
+		addr_abs = pc + addr_rel;
+
+		if((addr_abs & 0xFF00) != (pc & 0xFF00)) {
+			++cycles;
+		}
+		pc = addr_abs;
+	}
+	return 0;
+}
+/*
+ * Instruction: BMI
+ * Branch if Negative
+ * Function:	if(N == 1) pc = address
+ */
+uint8_t CPU6502::BMI() {
+	if(this->GetFlag(N) == 1) {
+		++cycles;
+		addr_abs = pc + addr_rel;
+
+		if((addr_abs & 0xFF00) != (pc & 0xFF00)) {
+			++cycles;
+		}
+		pc = addr_abs;
+	}
+	return 0;
+}
+/*
+ * Instruction: BPL
+ * Branch if Positive
+ * Function:	if(N == 0) pc = address
+ */
+uint8_t CPU6502::BPL() {
+	if(this->GetFlag(N) == 0) {
 		++cycles;
 		addr_abs = pc + addr_rel;
 
