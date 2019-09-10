@@ -432,3 +432,12 @@ uint8_t CPU6502::BPL() {
 	}
 	return 0;
 }
+/*
+ * Instruction: CLC
+ * Clear carry Flag
+ * Function:	C = 0;
+ */
+uint8_t CPU6502::CLC() {
+	this->SetFlag(C, false);
+	return 0;
+}
