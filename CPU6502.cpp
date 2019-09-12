@@ -485,3 +485,41 @@ uint8_t CPU6502::CLV() {
 	this->SetFlag(V, false);
 	return 0;
 }
+/* Instruction: ADC
+ * Addition with special attention to the C, Z, V, N Flags
+ * Function:	A += M + C
+ * Flags:		C if result is > 255
+ * 				Z if result is 0
+ * 				V if ~(A^M) & (A^R) // R -> Result
+ * Flags base on the following hypothesis:
+ * Pos + Pos = Neg -> Overflow
+ * Neg + Neg = Pos -> Overflow
+ * Pos + Neg = All -> cannot overflow
+ * Pos + Pos = Pos -> No Overflow
+ * Neg + Neg = Neg -> No Overflow
+ */
+uint8_t CPU6502::ADC() {
+
+	this->fetch(); // grab the data we want to add
+
+	/*
+	 * The actual addition is performed in 16-Bit Words to capture
+	 * any set Carry Bit, which will be located in Bit 8 of the word.
+	 */
+	this->temp = (uint16_t)this->a + (uint16_t)this->fetched + (uint16_t)GetFlag(C);
+
+	SetFlag(C, this->temp > 255); // Set Carry Flag if high byte bit is 0
+
+	SetFlag(Z, (this->temp & 0x00FF) == 0); // Zero Flag if result is zero
+
+	/*
+	 * Overflow Flag is set accordingly to the methods description
+	 */
+	SetFlag(V, (~((uint16_t)this->a ^ (uint16_t)this->fetched) & ((uint16_t)this->a ^ (uint16_t)this->temp)) & 0x0080);
+
+	SetFlag(N, (this->temp & 0x80)); // Negative Flag is set to the MSB of the result
+
+	this->a = this->temp & 0x00FF; // Put the result in the accumulator register
+
+	return 1; // This instruction has the potential to add an clock cycle
+}
