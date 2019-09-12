@@ -459,3 +459,29 @@ uint8_t CPU6502::CLC() {
 	this->SetFlag(C, false);
 	return 0;
 }
+/*
+ * Instruction: CLD
+ * Clear Decimal Flag
+ * Function:	D = 0;
+ */
+uint8_t CPU6502::CLD() {
+	this->SetFlag(D, false);
+	return 0;
+}
+/*
+ * Instruction: CLI
+ * Disable Interrupts / Clear Interrupt Flag
+ * Function:	I = 0;
+ */
+uint8_t CPU6502::CLI() {
+	this->SetFlag(I, false);
+	return 0;
+}
+/* Instruction: CLV
+ * Clear Overflow Flag
+ * Function:	V = 0;
+ */
+uint8_t CPU6502::CLV() {
+	this->SetFlag(V, false);
+	return 0;
+}
