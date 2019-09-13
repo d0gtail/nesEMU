@@ -114,6 +114,34 @@ void CPU6502::irq() {
 		this->cycles = 7;
 	}
 }
+/*
+ * Non Markable Interrupt
+ *
+ * Cannot be ignored
+ *
+ * Behaves like the regular IRQ but reads the PC addres from 0xFFFA
+ */
+void CPU6502::nmi() {
+	// Push the PC to the stack
+	write(this->STACKBASE + this->stkp, (this->pc >> 8) & 0x00FF);
+	--this->stkp;
+	write(this->STACKBASE + this->stkp, this->pc & 0x00FF);
+	--this->stkp;
+
+	// Push status register to the stack
+	SetFlag(this->B, 0);
+	SetFlag(this->U, 1);
+	SetFlag(this->I, 1);
+	write(this->STACKBASE + this->stkp, this->status);
+	--this->stkp;
+
+	uint16_t nmiLo = read(this->NMI_PC + 0);
+	uint16_t nmiHi = read(this->NMI_PC + 1);
+	this->pc = (nmiHi << 8) | nmiLo;
+
+	// NMI need 8 cycles
+	this->cycles = 8;
+}
 void CPU6502::clock() {
 	/*
 	 * If the clock gets triggered we only going to perform any kind of operation

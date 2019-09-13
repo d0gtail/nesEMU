@@ -76,6 +76,9 @@ private:
 	// Address for PC during an IRQ
 	uint16_t const IRQ_PC = 0xFFFE;
 
+	// Addres for PC during NMI
+	uint16_t const NMI_PC = 0xFFFA;
+
 	/*
 	 * Assisting variables in the CPU
 	 */
