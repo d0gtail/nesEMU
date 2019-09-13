@@ -517,9 +517,62 @@ uint8_t CPU6502::ADC() {
 	 */
 	SetFlag(V, (~((uint16_t)this->a ^ (uint16_t)this->fetched) & ((uint16_t)this->a ^ (uint16_t)this->temp)) & 0x0080);
 
-	SetFlag(N, (this->temp & 0x80)); // Negative Flag is set to the MSB of the result
+	SetFlag(N, (this->temp & 0x0080)); // Negative Flag is set to the MSB of the result
 
 	this->a = this->temp & 0x00FF; // Put the result in the accumulator register
 
 	return 1; // This instruction has the potential to add an clock cycle
+}
+/*
+ * Instruction SBC
+ * Subtraction with special attention to the C, Z, V, N Flags
+ * Function:		A -= M-(1 - C), A += -1(M-(1-C)), A += -M + 1 + C
+ * Flags:			C, V, N, Z
+ *
+ * After reordering the mathematical function we end up with an addition with the data negated
+ */
+uint8_t CPU6502::SBC() {
+	this->fetch();
+
+	uint16_t val = ((uint16_t)this->fetched) ^ 0x00FF; // Invert the bottom 8-Bits with xor
+
+	/*
+	 * From here on we do the same thing as in ADC
+	 */
+	this->temp = (uint16_t)this->a + val + (uint16_t)GetFlag(C);
+
+	SetFlag(C, this->temp > 255); // Set Carry Flag if high byte bit is 0
+
+	SetFlag(Z, (this->temp & 0x00FF) == 0); // Zero Flag if result is zero
+
+	SetFlag(V, (this->temp ^ (uint16_t)this->a) & (this->temp ^ val) & 0x0080);
+
+	SetFlag(N, this->temp & 0x0080);
+
+	this->a = this->temp & 0x00FF;
+
+	return 1;
+}
+/*
+ * Instruction PHA
+ * Push Accumulator to Stack
+ * Function:	A -> Stack
+ */
+uint8_t CPU6502::PHA() {
+	write(this->STACKBASE + this->stkp, this->a);
+	--this->stkp;
+	return 0;
+}
+/*
+ * Instruction PHP
+ * Push Status Register to Stack
+ * Function:	status -> Stack
+ * Note:		Break Flag is set to 1 before push
+ */
+uint8_t CPU6502::PHP() {
+	write(this->STACKBASE + this->stkp, this->status | B | U); // Set Break to 1 before push
+	SetFlag(B, 0);
+	SetFlag(U, 0);
+	--this->stkp;
+	return 0;
 }

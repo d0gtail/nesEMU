@@ -64,6 +64,11 @@ private:
 	uint8_t read(uint16_t addr);
 
 	/*
+	 * Base location of the STACK hard coded in the CPU = 0x0100
+	 */
+	uint16_t const STACKBASE = 0x0100;
+
+	/*
 	 * Assisting variables in the CPU
 	 */
 	uint8_t fetched 		= 0x00;		// Date which is fetched and used for the ALU
