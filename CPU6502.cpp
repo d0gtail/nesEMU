@@ -65,8 +65,8 @@ uint8_t CPU6502::read(uint16_t addr) {
  */
 void CPU6502::reset() {
 	// Get the address to set the PC to
-	uint16_t rstLo = read(this->PCRESETBASE + 0);
-	uint16_t rstHi = read(this->PCRESETBASE + 1);
+	uint16_t rstLo = read(this->RESET_PC + 0);
+	uint16_t rstHi = read(this->RESET_PC + 1);
 	// Set the PC
 	this->pc = (rstHi << 8 | rstLo);
 
@@ -74,7 +74,7 @@ void CPU6502::reset() {
 	this->a = 0x00;
 	this->x = 0x00;
 	this->y = 0x00;
-	this->stkp = this->STKPRESETBASE;
+	this->stkp = this->RESET_STKP;
 	this->status = 0x00 | this->U;
 
 	// Reset internal helpers

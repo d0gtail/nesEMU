@@ -68,10 +68,10 @@ private:
 	uint16_t const STACKBASE = 0x0100;
 
 	// Location to read the actual PC address from during a CPU Reset
-	uint16_t const PCRESETBASE = 0xFFFC;
+	uint16_t const RESET_PC = 0xFFFC;
 
 	// Address for the Stackpointer during a CPU Reset
-	uint8_t const STKPRESETBASE = 0xFD;
+	uint8_t const RESET_STKP = 0xFD;
 
 	// Address for PC during an IRQ
 	uint16_t const IRQ_PC = 0xFFFE;
