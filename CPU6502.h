@@ -73,6 +73,9 @@ private:
 	// Address for the Stackpointer during a CPU Reset
 	uint8_t const STKPRESETBASE = 0xFD;
 
+	// Address for PC during an IRQ
+	uint16_t const IRQ_PC = 0xFFFE;
+
 	/*
 	 * Assisting variables in the CPU
 	 */

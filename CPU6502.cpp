@@ -85,7 +85,35 @@ void CPU6502::reset() {
 	// Reset needs 8 cycles
 	this->cycles = 8;
 }
+/*
+ * Interrupt request immediate attention from the CPU but only when the
+ * disable interrupt flag is 0
+ */
+void CPU6502::irq() {
+	if(GetFlag(this->I) == 0) {
+		// Push the PC to the stack
+		write(this->STACKBASE + this->stkp, (pc >> 8) & 0x00FF);
+		--this->stkp;
+		write(this->STACKBASE + this->stkp, pc & 0x00FF);
+		--this->stkp;
 
+		// Push status register to the stack
+		SetFlag(this->B, 0);
+		SetFlag(this->U, 1);
+		SetFlag(this->I, 1);
+		write(this->STACKBASE + this->stkp, this->status);
+		--this->stkp;
+
+		// Read new PC location from fixed address
+		uint16_t irqLo = read(this->IRQ_PC + 0);
+		uint16_t irqHi = read(this->IRQ_PC + 1);
+
+		this->pc = (irqHi << 8) | irqLo;
+
+		// IRQ needs 7 cycles
+		this->cycles = 7;
+	}
+}
 void CPU6502::clock() {
 	/*
 	 * If the clock gets triggered we only going to perform any kind of operation
