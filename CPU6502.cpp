@@ -648,3 +648,20 @@ uint8_t CPU6502::PLA() {
 	SetFlag(N, this->a & 0x80);
 	return 0;
 }
+/*
+ * Instruciton RTI
+ * Return from Interrupt
+ * Reverse the Status of the CPU to what it was before the IRQ
+ */
+uint8_t CPU6502::RTI() {
+	++this->stkp;
+	this->status = read(this->STACKBASE + this->stkp);
+	this->status &= ~this->B;
+	this->status &= ~this->U;
+
+	++this->stkp;
+	this->pc = (uint16_t)read(this->STACKBASE + this->stkp);
+	++this->stkp;
+	this->pc |= (uint16_t)read((this->STACKBASE + this->stkp) << 8);
+	return 0;
+}
