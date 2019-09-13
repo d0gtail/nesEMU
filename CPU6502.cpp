@@ -15,7 +15,7 @@ CPU6502::CPU6502() {
 	 * 16x16 entries -> 256 instructions where 56 of them are used as legal instructions
 	 * Bottom 4 Bits -> column
 	 * Top 4 Bits -> row
-	 * initialiser list of initialiser lists
+	 * Initializer list of initializer lists
 	 *
 	 * MNEMONIC, Pointer to opcode, Pointer to Address Mode, Cycle count
 	 * { "BRK",     &CPU6502::BRK,    &CPU6502::IMM,           7 }
@@ -61,24 +61,24 @@ void CPU6502::clock() {
 	 * to be that precise and modern computers are way faster than this old CPU we
 	 * simply tick the leftover cycles down by doing nothing here.
 	 */
-	if(cycles == 0) {
+	if(this->cycles == 0) {
 
 		// read instruction byte at the program counter
 		// and look it up in the translation table to see what the opcode has to do
-		opcode = read(pc);
-		// instruction has been read, incremet the program counter
-		++pc;
+		this->opcode = read(this->pc);
+		// instruction has been read, increment the program counter
+		++this->pc;
 		// get initial number of needed cycles
-		cycles = lookup[opcode].cycles;
+		this->cycles = lookup[this->opcode].cycles;
 		// fetch data using the underlying addressing mode and store additional cycles
-		uint8_t additionalCyleAddrMode = (this->*lookup[opcode].addrmode)();
+		uint8_t additionalCyleAddrMode = (this->*lookup[this->opcode].addrmode)();
 		// perform the operation and again store more additional cycles
-		uint8_t additionalCyclesOperation = (this->*lookup[opcode].operate)();
+		uint8_t additionalCyclesOperation = (this->*lookup[this->opcode].operate)();
 		// calculate overall cycles
-		cycles += (additionalCyleAddrMode & additionalCyclesOperation);
+		this->cycles += (additionalCyleAddrMode & additionalCyclesOperation);
 	}
 	// decrement the cycles since we performed the operation
-	--cycles;
+	--this->cycles;
 }
 /*
  * FLAG FUNCTIONS:
@@ -86,16 +86,16 @@ void CPU6502::clock() {
  * GetFlag: Returns the value of a specific Bit of the status register
  */
 uint8_t CPU6502::GetFlag(FLAGS6502 f) {
-	return ((status & f) > 0) ? 1 : 0;
+	return ((this->status & f) > 0) ? 1 : 0;
 }
 /*
  * SetFlag: Sets of clears a specific Bit of the status register
  */
 void CPU6502::SetFlag(FLAGS6502 f, bool v) {
 	if(v) {
-		status |= f;
+		this->status |= f;
 	}else{
-		status &= ~f;
+		this->status &= ~f;
 	}
 }
 /*
@@ -117,7 +117,7 @@ void CPU6502::SetFlag(FLAGS6502 f, bool v) {
  * we will use the accumulator for instructions like PHA.
  */
 uint8_t CPU6502::IMP() {
-	fetched = a; // storing the accumulator register in fetched
+	this->fetched = a; // storing the accumulator register in this->fetched
 	return 0; // no additional cycle needed
 }
 /*
@@ -126,7 +126,7 @@ uint8_t CPU6502::IMP() {
  * next byte
  */
 uint8_t CPU6502::IMM(){
-	addr_abs = pc++;
+	this->addr_abs = ++this->pc;
 	return 0;
 }
 /*
@@ -135,9 +135,9 @@ uint8_t CPU6502::IMM(){
  * This only requires one byte instead of two.
  */
 uint8_t CPU6502::ZP0() {
-	addr_abs = read(pc);
-	++pc;
-	addr_abs &= 0x00FF;
+	this->addr_abs = read(this->pc);
+	++this->pc;
+	this->addr_abs &= 0x00FF;
 	return 0;
 }
 /*
@@ -146,9 +146,9 @@ uint8_t CPU6502::ZP0() {
  * Useful for iterating within the first page.
  */
 uint8_t CPU6502::ZPX() {
-	addr_abs = (read(pc) + x);
-	++pc;
-	addr_abs &= 0x00FF;
+	this->addr_abs = (read(this->pc) + x);
+	++this->pc;
+	this->addr_abs &= 0x00FF;
 	return 0;
 }
 /*
@@ -156,9 +156,9 @@ uint8_t CPU6502::ZPX() {
  * Same as ZPX only with the Y Register used as offset
  */
 uint8_t CPU6502::ZPY() {
-	addr_abs = (read(pc) + y);
-	++pc;
-	addr_abs &= 0x00FF;
+	this->addr_abs = (read(this->pc) + y);
+	++this->pc;
+	this->addr_abs &= 0x00FF;
 	return 0;
 }
 /*
@@ -168,10 +168,10 @@ uint8_t CPU6502::ZPY() {
  * to any address in the addressable range directly.
  */
 uint8_t CPU6502::REL() {
-	addr_rel = read(pc);
-	++pc;
-	if(addr_rel & 0x80) { // check if address is signed
-		addr_rel |= 0xFF00;
+	this->addr_rel = read(this->pc);
+	++this->pc;
+	if(this->addr_rel & 0x80) { // check if address is signed
+		this->addr_rel |= 0xFF00;
 	}
 	return 0;
 }
@@ -181,11 +181,11 @@ uint8_t CPU6502::REL() {
  * Full 16-Bit address is used
  */
 uint8_t CPU6502::ABS() {
-	uint16_t loByte = read(pc);
-	++pc;
-	uint16_t hiByte = read(pc);
-	++pc;
-	addr_abs = ((hiByte << 8) | loByte);
+	uint16_t loByte = read(this->pc);
+	++this->pc;
+	uint16_t hiByte = read(this->pc);
+	++this->pc;
+	this->addr_abs = ((hiByte << 8) | loByte);
 	return 0;
 }
 /*
@@ -195,17 +195,17 @@ uint8_t CPU6502::ABS() {
  * an additional clock cycle is required
  */
 uint8_t CPU6502::ABX() {
-	uint16_t loByte = read(pc);
-	++pc;
-	uint16_t hiByte = read(pc);
-	++pc;
-	addr_abs = ((hiByte << 8) | loByte);
-	addr_abs += this->x;
+	uint16_t loByte = read(this->pc);
+	++this->pc;
+	uint16_t hiByte = read(this->pc);
+	++this->pc;
+	this->addr_abs = ((hiByte << 8) | loByte);
+	this->addr_abs += this->x;
 
 	// hiByte shifted by 8 to the left represents the page index
 	// if the resulting high part of addr_abs isn't the same as the high byte
 	// the page index has changed so we have throw an extra clock cycle in the equation
-	if((addr_abs & 0xFF00) != (hiByte << 8)) {
+	if((this->addr_abs & 0xFF00) != (hiByte << 8)) {
 		return 1;
 	}else{
 		return 0;
@@ -216,17 +216,17 @@ uint8_t CPU6502::ABX() {
  * Same as ABX but with the Y Register
  */
 uint8_t CPU6502::ABY() {
-	uint16_t loByte = read(pc);
-	++pc;
-	uint16_t hiByte = read(pc);
-	++pc;
-	addr_abs = ((hiByte << 8) | loByte);
-	addr_abs += this->y;
+	uint16_t loByte = read(this->pc);
+	++this->pc;
+	uint16_t hiByte = read(this->pc);
+	++this->pc;
+	this->addr_abs = ((hiByte << 8) | loByte);
+	this->addr_abs += this->y;
 
 	// hiByte shifted by 8 to the left represents the page index
 	// if the resulting high part of addr_abs isn't the same as the high byte
 	// the page index has changed so we have throw an extra clock cycle in the equation
-	if((addr_abs & 0xFF00) != (hiByte << 8)) {
+	if((this->addr_abs & 0xFF00) != (hiByte << 8)) {
 		return 1;
 	}else{
 		return 0;
@@ -244,17 +244,17 @@ uint8_t CPU6502::ABY() {
  * actual address
  */
 uint8_t CPU6502::IND() {
-	uint16_t ptrLo = read(pc);
-	++pc;
-	uint16_t ptrHi = read(pc);
-	++pc;
+	uint16_t ptrLo = read(this->pc);
+	++this->pc;
+	uint16_t ptrHi = read(this->pc);
+	++this->pc;
 
 	uint16_t ptr = ((ptrHi << 8) | ptrLo);
 
 	if(ptrLo == 0x00FF) {// Simulate page boundary hardware bug
-		addr_abs = (read(ptr & 0xFF00) << 8 | read(ptr + 0));
+		this->addr_abs = (read(ptr & 0xFF00) << 8 | read(ptr + 0));
 	}else{ // Behave normally
-		addr_abs = (read(ptr + 1) << 8 | read(ptr + 0));
+		this->addr_abs = (read(ptr + 1) << 8 | read(ptr + 0));
 	}
 	return 0;
 }
@@ -264,13 +264,13 @@ uint8_t CPU6502::IND() {
  * in page 0x00. The actual 16-Bit Address is read from this location
  */
 uint8_t CPU6502::IZX() {
-	uint16_t temp = read(pc);
-	++pc;
+	uint16_t temp = read(this->pc);
+	++this->pc;
 
 	uint16_t ptrHi = read((uint16_t)(temp + (uint16_t)this->x) & 0x00FF);
 	uint16_t ptrLo = read((uint16_t)(temp + (uint16_t)this->x + 1) & 0x00FF);
 
-	addr_abs = ((ptrHi << 8) | ptrLo);
+	this->addr_abs = ((ptrHi << 8) | ptrLo);
 
 	return 0;
 }
@@ -282,16 +282,16 @@ uint8_t CPU6502::IZX() {
  * in page then an additional clock cycle is needed.
  */
 uint8_t CPU6502::IZY() {
-	uint16_t temp = read(pc);
-	++pc;
+	uint16_t temp = read(this->pc);
+	++this->pc;
 
 	uint16_t ptrLo = read(temp & 0x00FF);
 	uint16_t ptrHi = read((temp + 1) & 0x00FF);
 
-	addr_abs = ((ptrHi << 8) | ptrLo);
-	addr_abs += this->y;
+	this->addr_abs = ((ptrHi << 8) | ptrLo);
+	this->addr_abs += this->y;
 
-	if((addr_abs & 0xFF00) != (ptrHi << 8)) {
+	if((this->addr_abs & 0xFF00) != (ptrHi << 8)) {
 		return 1;
 	}else{
 		return 0;
@@ -299,7 +299,7 @@ uint8_t CPU6502::IZY() {
 }
 
 /*
- * Instructions: fetched
+ * Instructions: this->fetched
  *
  * This function grabs data used by the instruction into a
  * convenient variable. Some instructions don't have to fetch
@@ -312,8 +312,8 @@ uint8_t CPU6502::IZY() {
  *
  */
 uint8_t CPU6502::fetch() {
-	if(!(lookup[opcode].addrmode == &CPU6502::IMP)) {
-		this->fetched = read(addr_abs);
+	if(!(lookup[this->opcode].addrmode == &CPU6502::IMP)) {
+		this->fetched = read(this->addr_abs);
 	}
 	return this->fetched;
 }
@@ -324,7 +324,7 @@ uint8_t CPU6502::fetch() {
  * Flags Out:	N, Z
  */
 uint8_t CPU6502::AND() {
-	fetch(); // first fetch the data and store it in fetched
+	fetch(); // first fetch the data and store it in this->fetched
 	this->a = this->a & this->fetched; // and the data with the accumulator and store it in the accu.
 	SetFlag(Z, this->a == 0x00);
 	SetFlag(N, a & 0x80);
@@ -337,13 +337,13 @@ uint8_t CPU6502::AND() {
  */
 uint8_t CPU6502::BCC() {
 	if(this->GetFlag(C) == 0) {
-		++cycles; // add one additional cycle if branch to the same page (so at least one has to be added)
-		addr_abs = pc + addr_rel;
+		++this->cycles; // add one additional cycle if branch to the same page (so at least one has to be added)
+		this->addr_abs = this->pc + this->addr_rel;
 
-		if((addr_abs & 0xFF00) != (pc & 0xFF00)) {
-			++cycles; // add another clock cycle if page boundarys are crossed
+		if((this->addr_abs & 0xFF00) != (this->pc & 0xFF00)) {
+			++this->cycles; // add another clock cycle if page boundarys are crossed
 		}
-		pc = addr_abs;
+		this->pc = this->addr_abs;
 	}
 	return 0;
 }
@@ -354,13 +354,13 @@ uint8_t CPU6502::BCC() {
  */
 uint8_t CPU6502::BCS() {
 	if(this->GetFlag(C) == 1) {
-		++cycles;
-		addr_abs = pc + addr_rel;
+		++this->cycles;
+		this->addr_abs = this->pc + this->addr_rel;
 
-		if((addr_abs & 0xFF00) != (pc & 0xFF00)) {
-			++cycles;
+		if((this->addr_abs & 0xFF00) != (this->pc & 0xFF00)) {
+			++this->cycles;
 		}
-		pc = addr_abs;
+		this->pc = this->addr_abs;
 	}
 	return 0;
 }
@@ -371,13 +371,13 @@ uint8_t CPU6502::BCS() {
  */
 uint8_t CPU6502::BNE() {
 	if(this->GetFlag(Z) == 0) {
-		++cycles;
-		addr_abs = pc + addr_rel;
+		++this->cycles;
+		this->addr_abs = this->pc + this->addr_rel;
 
-		if((addr_abs & 0xFF00) != (pc & 0xFF00)) {
-			++cycles;
+		if((this->addr_abs & 0xFF00) != (this->pc & 0xFF00)) {
+			++this->cycles;
 		}
-		pc = addr_abs;
+		this->pc = this->addr_abs;
 	}
 	return 0;
 }
@@ -388,13 +388,13 @@ uint8_t CPU6502::BNE() {
  */
 uint8_t CPU6502::BEQ() {
 	if(this->GetFlag(Z) == 1) {
-		++cycles;
-		addr_abs = pc + addr_rel;
+		++this->cycles;
+		this->addr_abs = this->pc + this->addr_rel;
 
-		if((addr_abs & 0xFF00) != (pc & 0xFF00)) {
-			++cycles;
+		if((this->addr_abs & 0xFF00) != (this->pc & 0xFF00)) {
+			++this->cycles;
 		}
-		pc = addr_abs;
+		this->pc = this->addr_abs;
 	}
 	return 0;
 }
@@ -405,13 +405,13 @@ uint8_t CPU6502::BEQ() {
  */
 uint8_t CPU6502::BMI() {
 	if(this->GetFlag(N) == 1) {
-		++cycles;
-		addr_abs = pc + addr_rel;
+		++this->cycles;
+		this->addr_abs = this->pc + this->addr_rel;
 
-		if((addr_abs & 0xFF00) != (pc & 0xFF00)) {
-			++cycles;
+		if((this->addr_abs & 0xFF00) != (this->pc & 0xFF00)) {
+			++this->cycles;
 		}
-		pc = addr_abs;
+		this->pc = this->addr_abs;
 	}
 	return 0;
 }
@@ -421,14 +421,14 @@ uint8_t CPU6502::BMI() {
  * Function:	if(N == 0) pc = address
  */
 uint8_t CPU6502::BPL() {
-	if(this->GetFlag(N) == 0) {
-		++cycles;
-		addr_abs = pc + addr_rel;
+	if(GetFlag(N) == 0) {
+		++this->cycles;
+		this->addr_abs = this->pc + this->addr_rel;
 
-		if((addr_abs & 0xFF00) != (pc & 0xFF00)) {
-			++cycles;
+		if((this->addr_abs & 0xFF00) != (this->pc & 0xFF00)) {
+			++this->cycles;
 		}
-		pc = addr_abs;
+		this->pc = this->addr_abs;
 	}
 	return 0;
 }
@@ -438,14 +438,14 @@ uint8_t CPU6502::BPL() {
  * Function:	if(V == 0) pc = address
  */
 uint8_t CPU6502::BVC() {
-	if(this->GetFlag(V) == 0) {
-		++cycles;
-		addr_abs = pc + addr_rel;
+	if(GetFlag(V) == 0) {
+		++this->cycles;
+		this->addr_abs = this->pc + this->addr_rel;
 
-		if((addr_abs & 0xFF00) != (pc & 0xFF00)) {
-			++cycles;
+		if((this->addr_abs & 0xFF00) != (this->pc & 0xFF00)) {
+			++this->cycles;
 		}
-		pc = addr_abs;
+		this->pc = this->addr_abs;
 	}
 	return 0;
 }
@@ -456,7 +456,7 @@ uint8_t CPU6502::BVC() {
  * Function:	C = 0;
  */
 uint8_t CPU6502::CLC() {
-	this->SetFlag(C, false);
+	SetFlag(C, false);
 	return 0;
 }
 /*
@@ -465,7 +465,7 @@ uint8_t CPU6502::CLC() {
  * Function:	D = 0;
  */
 uint8_t CPU6502::CLD() {
-	this->SetFlag(D, false);
+	SetFlag(D, false);
 	return 0;
 }
 /*
@@ -474,7 +474,7 @@ uint8_t CPU6502::CLD() {
  * Function:	I = 0;
  */
 uint8_t CPU6502::CLI() {
-	this->SetFlag(I, false);
+	SetFlag(I, false);
 	return 0;
 }
 /* Instruction: CLV
@@ -482,7 +482,7 @@ uint8_t CPU6502::CLI() {
  * Function:	V = 0;
  */
 uint8_t CPU6502::CLV() {
-	this->SetFlag(V, false);
+	SetFlag(V, false);
 	return 0;
 }
 /* Instruction: ADC
@@ -565,7 +565,7 @@ uint8_t CPU6502::PHA() {
 }
 /*
  * Instruction PHP
- * Push Status Register to Stack
+ * Push status Register to Stack
  * Function:	status -> Stack
  * Note:		Break Flag is set to 1 before push
  */
@@ -574,5 +574,17 @@ uint8_t CPU6502::PHP() {
 	SetFlag(B, 0);
 	SetFlag(U, 0);
 	--this->stkp;
+	return 0;
+}
+/*
+ * Instruction PLA
+ * Pop Accumulator from the Stack
+ * Function:	A <- Stack
+ */
+uint8_t CPU6502::PLA() {
+	++this->stkp;
+	this->a = read(this->STACKBASE + this->stkp);
+	SetFlag(Z, this->a == 0x00);
+	SetFlag(N, this->a & 0x80);
 	return 0;
 }
