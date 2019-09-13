@@ -44,7 +44,7 @@ public:
 	uint8_t a = 0x00;		// Accumulator Register
 	uint8_t x = 0x00;		// X Register
 	uint8_t y = 0x00;		// Y Register
-	uint8_t stkp = 0x00;	// Stack Pointer
+	uint8_t stkp = 0xFD;	// Stack Pointer // TODO: check if this is doable
 	uint16_t pc = 0x0000;	// Program Counter
 
 	/*
@@ -63,10 +63,15 @@ private:
 	void write(uint16_t addr, uint8_t data);
 	uint8_t read(uint16_t addr);
 
-	/*
-	 * Base location of the STACK hard coded in the CPU = 0x0100
-	 */
+
+	// Base location of the STACK hard coded in the CPU = 0x0100
 	uint16_t const STACKBASE = 0x0100;
+
+	// Location to read the actual PC address from during a CPU Reset
+	uint16_t const PCRESETBASE = 0xFFFC;
+
+	// Address for the Stackpointer during a CPU Reset
+	uint8_t const STKPRESETBASE = 0xFD;
 
 	/*
 	 * Assisting variables in the CPU

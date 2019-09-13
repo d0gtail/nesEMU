@@ -53,6 +53,38 @@ void CPU6502::write(uint16_t addr, uint8_t data) {
 uint8_t CPU6502::read(uint16_t addr) {
 	return bus->read(addr, false);
 }
+/*
+ * External Inputs
+ *
+ * Reset sets the CPU in a known state
+ *
+ * Status register is cleared, except of the unused Bit which stays 1
+ * An absolute address is read from 0xFFFC which contains an further address
+ * which is used to set the Program Counter to. The value at 0xFFFC may be set
+ * at compile time to have an known starting point.
+ */
+void CPU6502::reset() {
+	// Get the address to set the PC to
+	uint16_t rstLo = read(this->PCRESETBASE + 0);
+	uint16_t rstHi = read(this->PCRESETBASE + 1);
+	// Set the PC
+	this->pc = (rstHi << 8 | rstLo);
+
+	// Reset internal registers
+	this->a = 0x00;
+	this->x = 0x00;
+	this->y = 0x00;
+	this->stkp = this->STKPRESETBASE;
+	this->status = 0x00 | this->U;
+
+	// Reset internal helpers
+	this->addr_abs = 0x0000;
+	this->addr_rel = 0x0000;
+	this->fetched = 0x00;
+
+	// Reset needs 8 cycles
+	this->cycles = 8;
+}
 
 void CPU6502::clock() {
 	/*
