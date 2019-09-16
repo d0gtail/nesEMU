@@ -556,7 +556,65 @@ uint8_t CPU6502::BVC() {
 	}
 	return 0;
 }
+/*
+ * Instruction: BVS
+ * Branch if overflow is set
+ * Function:	if(V == 1) pc = address
+ */
+uint8_t CPU6502::BVS() {
+	if(GetFlag(this->V) == 1) {
+		++this->cycles;
+		this->addr_abs = this->pc + this->addr_rel;
 
+		if((this->addr_abs & 0xFF00) != (this->pc & 0xFF00)) {
+			++this->cycles;
+		}
+		this->pc = this->addr_abs;
+	}
+	return 0;
+}
+/*
+ * Instruction: BIT
+ * Bit test, if one or more bits are set at a certain address
+ * Function:	A & M
+ * Flags out:	Z if(M = 0)
+ * 				N = M & (1 << 7)
+ * 				V = M & (1 << 6)
+ */
+uint8_t CPU6502::BIT() {
+	fetch();
+	this->temp = this->a & this->fetched;
+	SetFlag(this->Z, (this->temp & 0x00FF) == 0x00);
+	SetFlag(this->N, (this->fetched & (1 << 7)));
+	SetFlag(this->V, (this->fetched & (1 << 6)));
+	return 0;
+}
+/*
+ * Instruction:	BRK
+ * Break instruction forces an interrupt instruction
+ */
+uint8_t CPU6502::BRK() {
+	SetFlag(this->I, 1); // Going to do an interrupt right now
+
+	// Push the PC to the stack
+	write(this->STACKBASE + this->stkp, (pc >> 8) & 0x00FF);
+	--this->stkp;
+	write(this->STACKBASE + this->stkp, pc & 0x00FF);
+	--this->stkp;
+
+	// Push status register to the stack
+	SetFlag(this->B, 1); // Break has obviously set to one
+	write(this->STACKBASE + this->stkp, this->status);
+	--this->stkp;
+	SetFlag(this->B, 0); // Break is going to end // TODO: should this be at the end of the brk?
+
+	// Read new PC location from fixed address
+	uint16_t irqLo = read(this->IRQ_PC + 0); // 0xFFFE
+	uint16_t irqHi = read(this->IRQ_PC + 1); // 0xFFFF
+
+	this->pc = (irqHi << 8) | irqLo;
+	return 0;
+}
 /*
  * Instruction: CLC
  * Clear carry Flag
