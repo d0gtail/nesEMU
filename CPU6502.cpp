@@ -419,6 +419,25 @@ uint8_t CPU6502::AND() {
 	return 1; // potential candidate to add additional clock cycle
 }
 /*
+ * Instruction : ASL
+ * Arithmetic shift left
+ * Function:	A = C <- (A << 1) <- 0
+ * Flags Out:	N, Z, C
+ */
+uint8_t CPU6502::ASL() {
+	fetch();
+	this->temp = (uint16_t)this->fetched << 1;
+	SetFlag(this->C, (this->temp & 0xFF00) > 0);
+	SetFlag(this->Z, (this->temp & 0x00FF) == 0x00);
+	SetFlag(this->N, this->temp & 0x80);
+	if(lookup[this->opcode].addrmode == &CPU6502::IMP) {
+		this->a = this->temp & 0x00FF;
+	}else{
+		write(this->addr_abs, this->temp & 0x00FF);
+	}
+	return 0;
+}
+/*
  * Instruction: BCC
  * Branch when Carry is Clear
  * Function:	if(c==0) pc = address
