@@ -832,6 +832,18 @@ uint8_t CPU6502::JSR() {
 	this->pc = this->addr_abs;
 	return 0;
 }
+/* Instruction LDA
+ * Load the Accumulator
+ * Function:	A = M
+ * Flags out:	N, Z
+ */
+uint8_t CPU6502::LDA() {
+	this->fetch();
+	this->a = this->fetched;
+	SetFlag(this->Z, this->a == 0x00);
+	SetFlag(this->N, this->a & 0x80);
+	return 1;
+}
 /*
  * Instruction PHA
  * Push Accumulator to Stack
