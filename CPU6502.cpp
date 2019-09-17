@@ -856,7 +856,18 @@ uint8_t CPU6502::LDX() {
 	SetFlag(this->N, this->x & 0x80);
 	return 1;
 }
-
+/* Instruction LDY
+ * Load Y Register
+ * Function:	Y = M
+ * Flags out:	N, Z
+ */
+uint8_t CPU6502::LDY() {
+	this->fetch();
+	this->y = this->fetched;
+	SetFlag(this->Z, this->y == 0x00);
+	SetFlag(this->N, this->y & 0x80);
+	return 1;
+}
 /*
  * Instruction PHA
  * Push Accumulator to Stack
