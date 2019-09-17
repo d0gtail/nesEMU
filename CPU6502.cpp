@@ -810,6 +810,14 @@ uint8_t CPU6502::INY() {
 	SetFlag(this->N, this->y & 0x80);
 	return 0;
 }
+/* Instruction JMP
+ * Jump to memory location
+ * Function:	pc = address
+ */
+uint8_t CPU6502::JMP() {
+	this->pc = this->addr_abs;
+	return 0;
+}
 /*
  * Instruction PHA
  * Push Accumulator to Stack
