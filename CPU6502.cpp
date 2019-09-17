@@ -844,6 +844,19 @@ uint8_t CPU6502::LDA() {
 	SetFlag(this->N, this->a & 0x80);
 	return 1;
 }
+/* Instruction LDX
+ * Load X Register
+ * Function:	X = M
+ * Flags out:	N, Z
+ */
+uint8_t CPU6502::LDX() {
+	this->fetch();
+	this->x = this->fetched;
+	SetFlag(this->Z, this->x == 0x00);
+	SetFlag(this->N, this->x & 0x80);
+	return 1;
+}
+
 /*
  * Instruction PHA
  * Push Accumulator to Stack
