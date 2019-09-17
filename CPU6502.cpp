@@ -687,6 +687,83 @@ uint8_t CPU6502::CLV() {
 	return 0;
 }
 /*
+ * Instruction: CMP
+ * Compare Accumulator Register
+ * Function:	C <- A >= M		Z <- (A - M) == 0
+ * Flags out:	N, C, Z
+ */
+uint8_t CPU6502::CMP() {
+	this->fetch();
+	this->temp = (uint16_t)this->a - (uint16_t)this->fetched;
+	SetFlag(this->C, this->a >= this->fetched);
+	SetFlag(this->Z, (this->temp & 0x00FF) == 0x0000);
+	SetFlag(this->N, this->temp & 0x0080);
+	return 1;
+}
+/*
+ * Instruction:	CPX
+ * Compare X Register
+ * Function:	C <- X >= M		Z <- (X - M) == 0
+ * Flags out:	N, C, Z
+ */
+uint8_t CPU6502::CPX() {
+	this->fetch();
+	this->temp = (uint16_t)this->x - (uint16_t)this->fetched;
+	SetFlag(this->C, this->x >= this->fetched);
+	SetFlag(this->Z, (this->temp & 0x00FF) = 0x000);
+	SetFlag(this->N, this->temp & 0x0080);
+	return 0;
+}
+/* Instruction: CPY
+ * Compare Y Register
+ * Function:	C <- Y >= M		Z <- (Y - M) == 0
+ * Flags out:	N, C, Z
+ */
+uint8_t CPU6502::CPY() {
+	this->fetch();
+	this->temp = (uint16_t)this->y - (uint16_t)this->fetched;
+	SetFlag(this->C, this->y >= this->fetched);
+	SetFlag(this->Z, (this->temp & 0x00FF) = 0x0000);
+	SetFlag(this->N, this->temp & 0x0080);
+	return 0;
+}
+/* Instruction: DEC
+ * Decrement at memory location
+ * Function:	M = M - 1
+ * Flags out:	N, Z
+ */
+uint8_t CPU6502::DEC() {
+	this->fetch();
+	this->temp = this->fetched - 1;
+	write(this->addr_abs, this->temp & 0x00FF);
+	SetFlag(this->Z, (this->temp & 0x00FF) == 0x0000);
+	SetFlag(this->N, this->temp & 0x0080);
+	return 0;
+}
+/* Instruction: DEX
+ * Decrement the X Register
+ * Function:	X = X - 1
+ * Flags out:	N, Z
+ */
+uint8_t CPU6502::DEX() {
+	--this->x;
+	SetFlag(this->Z, this->x == 0x00);
+	SetFlag(this->N, this->x & 0x80);
+	return 0;
+
+}
+/* Instruction: DEY
+ * Decrement the Y Register
+ * Function:	Y = Y - 1
+ * Flags out:	N, Z
+ */
+uint8_t CPU6502::DEY() {
+	--this->y;
+	SetFlag(this->Z, this->y == 0x00);
+	SetFlag(this->N, this->y & 0x80);
+	return 0;
+}
+/*
  * Instruction PHA
  * Push Accumulator to Stack
  * Function:	A -> Stack
