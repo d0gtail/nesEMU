@@ -868,6 +868,67 @@ uint8_t CPU6502::LDY() {
 	SetFlag(this->N, this->y & 0x80);
 	return 1;
 }
+/* Instruction LSR
+ * Logical Shift Right
+ * Function:	A >> 1 | M >> 1
+ * Flags out:	C = M & 0x0001
+ * 				Z = temp == 0x0000
+ * 				N = temp & 0x0080
+ */
+uint8_t CPU6502::LSR() {
+	this->fetch();
+	SetFlag(C, this->fetched & 0x0001);
+	this->temp = this->fetched >> 1;
+	SetFlag(this->Z, (this->temp & 0x00FF) == 0x0000);
+	SetFlag(this->N, this-temp & 0x0080);
+	if(lookup[this->opcode].addrmode == &CPU6502::IMP) {
+		this->a = (this->temp & 0x00FF);
+	}else{
+		write(this->addr_abs, (this->temp & 0x00FF));
+	}
+	return 0;
+}
+/*
+ * Instruction NOP
+ * No operation
+ * Function:	switch to next instruction
+ */
+uint8_t CPU6502::NOP() {
+	/*
+	 * Not all NOPs are equal
+	 * some do nothing, some can add an additional clock cycle
+	 */
+	switch(this->opcode) {
+	case 0x1C:
+		return 1;
+		break;
+	case 0x3C:
+		return 1;
+		break;
+	case 0x5C:
+		return 1;
+		break;
+	case 0x7C:
+		return 1;
+		break;
+	case 0xFC:
+		return 1;
+		break;
+	}
+	return 0;
+}
+/* Instruction ORA
+ * Bitwise Logic OR
+ * Function:	A = A | M
+ * Flags out:	N, Z
+ */
+uint8_t CPU6502::ORA() {
+	this->fetch();
+	this->a = this->a | this->fetched;
+	SetFlag(Z, this->a == 0x00);
+	SetFlag(N, this->a & 0x80);
+	return 1;
+}
 /*
  * Instruction PHA
  * Push Accumulator to Stack
@@ -886,8 +947,8 @@ uint8_t CPU6502::PHA() {
  */
 uint8_t CPU6502::PHP() {
 	write(this->STACKBASE + this->stkp, this->status | B | U); // Set Break to 1 before push
-	SetFlag(B, 0);
-	SetFlag(U, 0);
+	SetFlag(this->B, 0);
+	SetFlag(this->U, 0);
 	--this->stkp;
 	return 0;
 }
@@ -899,8 +960,19 @@ uint8_t CPU6502::PHP() {
 uint8_t CPU6502::PLA() {
 	++this->stkp;
 	this->a = read(this->STACKBASE + this->stkp);
-	SetFlag(Z, this->a == 0x00);
-	SetFlag(N, this->a & 0x80);
+	SetFlag(this->Z, this->a == 0x00);
+	SetFlag(this->N, this->a & 0x80);
+	return 0;
+}
+/* Instruction PLP
+ * Pop Status Register off Stack
+ * Function:	status <- stack
+ * Flags out:	U = 1
+ */
+uint8_t CPU6502::PLP() {
+	++this->stkp;
+	this->status = read(this->STACKBASE + this->stkp);
+	SetFlag(this->U, 1);
 	return 0;
 }
 /*
