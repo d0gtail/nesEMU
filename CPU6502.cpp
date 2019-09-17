@@ -975,6 +975,26 @@ uint8_t CPU6502::PLP() {
 	SetFlag(this->U, 1);
 	return 0;
 }
+/* Instruction ROL
+ * Rotate Left
+ * Function:	A << 1 | M << 1
+ * Flags out:	C = temp & 0x0001
+ * 				Z = A == 0
+ * 				N = M & 0x0001
+ */
+uint8_t CPU6502::ROL() {
+	this->fetch();
+	this->temp = (uint16_t)(this->fetched << 1) | GetFlag(this->C);
+	SetFlag(this->C, this->temp & 0xFF00);
+	SetFlag(this->Z, (this->temp & 0x00FF) == 0x0000);
+	SetFlag(this->N, this->temp & 0x0080);
+	if(lookup[this->opcode].addrmode == &CPU6502::IMP) {
+		this->a = this->temp & 0x00FF;
+	}else{
+		write(this->addr_abs, this->temp & 0x00FF);
+	}
+	return 0;
+}
 /*
  * Instruction RTI
  * Return from Interrupt
