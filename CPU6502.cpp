@@ -775,6 +775,19 @@ uint8_t CPU6502::EOR() {
 	SetFlag(this->N, this->a & 0x80);
 	return 1;
 }
+/* Instruction: INC
+ * Increment at memory location
+ * Function:	M = M + 1
+ * Flags out:	N, Z
+ */
+uint8_t CPU6502::INC() {
+	this->fetch();
+	this->temp = (uint16_t)this->fetched + 1;
+	write(this->addr_abs, (this->temp & 0x00FF));
+	SetFlag(this->Z, (this->temp & 0x00FF) == 0x0000);
+	SetFlag(this->N, this->temp & 0x0080);
+	return 0;
+}
 /*
  * Instruction PHA
  * Push Accumulator to Stack
