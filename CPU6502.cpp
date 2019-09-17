@@ -818,6 +818,20 @@ uint8_t CPU6502::JMP() {
 	this->pc = this->addr_abs;
 	return 0;
 }
+/* Instruction JSR
+ * Jump to next subroutine
+ * Function:	push current pc to stack, pc = address
+ */
+uint8_t CPU6502::JSR() {
+	--this->pc;
+	write(this->STACKBASE + this->stkp, (this->pc >> 8) & 0x00FF);
+	--this->stkp;
+	write(this->STACKBASE + this->stkp, this->pc & 0x00FF);
+	--this->stkp;
+
+	this->pc = this->addr_abs;
+	return 0;
+}
 /*
  * Instruction PHA
  * Push Accumulator to Stack
