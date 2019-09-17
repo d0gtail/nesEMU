@@ -788,6 +788,17 @@ uint8_t CPU6502::INC() {
 	SetFlag(this->N, this->temp & 0x0080);
 	return 0;
 }
+/* Instruction INX
+ * Increment X Register
+ * Function:	X = X + 1
+ * Flags out:	N, Z
+ */
+uint8_t CPU6502::INX() {
+	++this->x;
+	SetFlag(this->Z, this->x == 0x00);
+	SetFlag(this->N, this->x & 0x00);
+	return 0;
+}
 /*
  * Instruction PHA
  * Push Accumulator to Stack
