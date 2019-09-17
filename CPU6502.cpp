@@ -799,6 +799,17 @@ uint8_t CPU6502::INX() {
 	SetFlag(this->N, this->x & 0x00);
 	return 0;
 }
+/* Instruction INY
+ * Increment Y Register
+ * Function:	Y = Y + 1
+ * Flags out:	N, Z
+ */
+uint8_t CPU6502::INY() {
+	++this->y;
+	SetFlag(this->Z, this->y == 0x00);
+	SetFlag(this->N, this->y & 0x80);
+	return 0;
+}
 /*
  * Instruction PHA
  * Push Accumulator to Stack
