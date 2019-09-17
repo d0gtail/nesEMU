@@ -199,71 +199,6 @@ void CPU6502::SetFlag(FLAGS6502 f, bool v) {
  * cycle so does each instruction. If both of them return 1 as Flag an additional clock cycle
  * is required
  */
-
-/* Addr. Mode: Implied
- * Doesn't need additional data. Does very simple tasks like setting an status bit. However,
- * we will use the accumulator for instructions like PHA.
- */
-uint8_t CPU6502::IMP() {
-	this->fetched = a; // storing the accumulator register in this->fetched
-	return 0; // no additional cycle needed
-}
-/*
- * Addr. Mode: Immediate
- * The instruction expects the next byte as value so we set the read address to point to the
- * next byte
- */
-uint8_t CPU6502::IMM(){
-	this->addr_abs = ++this->pc;
-	return 0;
-}
-/*
- * Addr. Mode: Zero Page
- * To save time and bytes to use, zero page addressing absolute addresses the page zero.
- * This only requires one byte instead of two.
- */
-uint8_t CPU6502::ZP0() {
-	this->addr_abs = read(this->pc);
-	++this->pc;
-	this->addr_abs &= 0x00FF;
-	return 0;
-}
-/*
- * Addr. Mode: Zero Page /w X offset
- * Like ZP0 but with the X Register added to the single byte address
- * Useful for iterating within the first page.
- */
-uint8_t CPU6502::ZPX() {
-	this->addr_abs = (read(this->pc) + x);
-	++this->pc;
-	this->addr_abs &= 0x00FF;
-	return 0;
-}
-/*
- * Addr. Mode: Zero Page /w Y offset
- * Same as ZPX only with the Y Register used as offset
- */
-uint8_t CPU6502::ZPY() {
-	this->addr_abs = (read(this->pc) + y);
-	++this->pc;
-	this->addr_abs &= 0x00FF;
-	return 0;
-}
-/*
- * Addr. Mode: Relative
- * Exclusive for branch instructions. The address must be within
- * -128 to +127 of the branching instruction. It cannot be branched
- * to any address in the addressable range directly.
- */
-uint8_t CPU6502::REL() {
-	this->addr_rel = read(this->pc);
-	++this->pc;
-	if(this->addr_rel & 0x80) { // check if address is signed
-		this->addr_rel |= 0xFF00;
-	}
-	return 0;
-}
-
 /*
  * Addr. Mode: Absolute
  * Full 16-Bit address is used
@@ -319,6 +254,23 @@ uint8_t CPU6502::ABY() {
 	}else{
 		return 0;
 	}
+}
+/* Addr. Mode: Implied
+ * Doesn't need additional data. Does very simple tasks like setting an status bit. However,
+ * we will use the accumulator for instructions like PHA.
+ */
+uint8_t CPU6502::IMP() {
+	this->fetched = a; // storing the accumulator register in this->fetched
+	return 0; // no additional cycle needed
+}
+/*
+ * Addr. Mode: Immediate
+ * The instruction expects the next byte as value so we set the read address to point to the
+ * next byte
+ */
+uint8_t CPU6502::IMM(){
+	this->addr_abs = ++this->pc;
+	return 0;
 }
 // Next 3 address modes use indirection (aka Pointers)
 /*
@@ -385,9 +337,55 @@ uint8_t CPU6502::IZY() {
 		return 0;
 	}
 }
+/*
+ * Addr. Mode: Relative
+ * Exclusive for branch instructions. The address must be within
+ * -128 to +127 of the branching instruction. It cannot be branched
+ * to any address in the addressable range directly.
+ */
+uint8_t CPU6502::REL() {
+	this->addr_rel = read(this->pc);
+	++this->pc;
+	if(this->addr_rel & 0x80) { // check if address is signed
+		this->addr_rel |= 0xFF00;
+	}
+	return 0;
+}
+/*
+ * Addr. Mode: Zero Page
+ * To save time and bytes to use, zero page addressing absolute addresses the page zero.
+ * This only requires one byte instead of two.
+ */
+uint8_t CPU6502::ZP0() {
+	this->addr_abs = read(this->pc);
+	++this->pc;
+	this->addr_abs &= 0x00FF;
+	return 0;
+}
+/*
+ * Addr. Mode: Zero Page /w X offset
+ * Like ZP0 but with the X Register added to the single byte address
+ * Useful for iterating within the first page.
+ */
+uint8_t CPU6502::ZPX() {
+	this->addr_abs = (read(this->pc) + x);
+	++this->pc;
+	this->addr_abs &= 0x00FF;
+	return 0;
+}
+/*
+ * Addr. Mode: Zero Page /w Y offset
+ * Same as ZPX only with the Y Register used as offset
+ */
+uint8_t CPU6502::ZPY() {
+	this->addr_abs = (read(this->pc) + y);
+	++this->pc;
+	this->addr_abs &= 0x00FF;
+	return 0;
+}
 
 /*
- * Instructions: this->fetched
+ * Instructions: fetch
  *
  * This function grabs data used by the instruction into a
  * convenient variable. Some instructions don't have to fetch
@@ -404,6 +402,44 @@ uint8_t CPU6502::fetch() {
 		this->fetched = read(this->addr_abs);
 	}
 	return this->fetched;
+}
+/* Instruction: ADC
+ * Addition with special attention to the C, Z, V, N Flags
+ * Function:	A += M + C
+ * Flags:		C if result is > 255
+ * 				Z if result is 0
+ * 				V if ~(A^M) & (A^R) // R -> Result
+ * Flags base on the following hypothesis:
+ * Pos + Pos = Neg -> Overflow
+ * Neg + Neg = Pos -> Overflow
+ * Pos + Neg = All -> cannot overflow
+ * Pos + Pos = Pos -> No Overflow
+ * Neg + Neg = Neg -> No Overflow
+ */
+uint8_t CPU6502::ADC() {
+
+	this->fetch(); // grab the data we want to add
+
+	/*
+	 * The actual addition is performed in 16-Bit Words to capture
+	 * any set Carry Bit, which will be located in Bit 8 of the word.
+	 */
+	this->temp = (uint16_t)this->a + (uint16_t)this->fetched + (uint16_t)GetFlag(C);
+
+	SetFlag(C, this->temp > 255); // Set Carry Flag if high byte bit is 0
+
+	SetFlag(Z, (this->temp & 0x00FF) == 0); // Zero Flag if result is zero
+
+	/*
+	 * Overflow Flag is set accordingly to the methods description
+	 */
+	SetFlag(V, (~((uint16_t)this->a ^ (uint16_t)this->fetched) & ((uint16_t)this->a ^ (uint16_t)this->temp)) & 0x0080);
+
+	SetFlag(N, (this->temp & 0x0080)); // Negative Flag is set to the MSB of the result
+
+	this->a = this->temp & 0x00FF; // Put the result in the accumulator register
+
+	return 1; // This instruction has the potential to add an clock cycle
 }
 /*
  * Instruction: AND
@@ -472,12 +508,12 @@ uint8_t CPU6502::BCS() {
 	return 0;
 }
 /*
- * Instruction: BNE
- * Branch not Equal
- * Function:	if(Z == 0) pc = address
+ * Instruction: BEQ
+ * Branch if Equal
+ * Function:	if(Z == 1) pc = address
  */
-uint8_t CPU6502::BNE() {
-	if(this->GetFlag(Z) == 0) {
+uint8_t CPU6502::BEQ() {
+	if(this->GetFlag(Z) == 1) {
 		++this->cycles;
 		this->addr_abs = this->pc + this->addr_rel;
 
@@ -489,12 +525,28 @@ uint8_t CPU6502::BNE() {
 	return 0;
 }
 /*
- * Instruction: BEQ
- * Branch if Equal
- * Function:	if(Z == 1) pc = address
+ * Instruction: BIT
+ * Bit test, if one or more bits are set at a certain address
+ * Function:	A & M
+ * Flags out:	Z if(M = 0)
+ * 				N = M & (1 << 7)
+ * 				V = M & (1 << 6)
  */
-uint8_t CPU6502::BEQ() {
-	if(this->GetFlag(Z) == 1) {
+uint8_t CPU6502::BIT() {
+	fetch();
+	this->temp = this->a & this->fetched;
+	SetFlag(this->Z, (this->temp & 0x00FF) == 0x00);
+	SetFlag(this->N, (this->fetched & (1 << 7)));
+	SetFlag(this->V, (this->fetched & (1 << 6)));
+	return 0;
+}
+/*
+ * Instruction: BNE
+ * Branch not Equal
+ * Function:	if(Z == 0) pc = address
+ */
+uint8_t CPU6502::BNE() {
+	if(this->GetFlag(Z) == 0) {
 		++this->cycles;
 		this->addr_abs = this->pc + this->addr_rel;
 
@@ -540,6 +592,32 @@ uint8_t CPU6502::BPL() {
 	return 0;
 }
 /*
+ * Instruction:	BRK
+ * Break instruction forces an interrupt instruction
+ */
+uint8_t CPU6502::BRK() {
+	SetFlag(this->I, 1); // Going to do an interrupt right now
+
+	// Push the PC to the stack
+	write(this->STACKBASE + this->stkp, (pc >> 8) & 0x00FF);
+	--this->stkp;
+	write(this->STACKBASE + this->stkp, pc & 0x00FF);
+	--this->stkp;
+
+	// Push status register to the stack
+	SetFlag(this->B, 1); // Break has obviously set to one
+	write(this->STACKBASE + this->stkp, this->status);
+	--this->stkp;
+	SetFlag(this->B, 0); // Break is going to end // TODO: should this be at the end of the brk?
+
+	// Read new PC location from fixed address
+	uint16_t irqLo = read(this->IRQ_PC + 0); // 0xFFFE
+	uint16_t irqHi = read(this->IRQ_PC + 1); // 0xFFFF
+
+	this->pc = (irqHi << 8) | irqLo;
+	return 0;
+}
+/*
  * Instruction: BVC
  * Branch if Overflow is Clear
  * Function:	if(V == 0) pc = address
@@ -571,48 +649,6 @@ uint8_t CPU6502::BVS() {
 		}
 		this->pc = this->addr_abs;
 	}
-	return 0;
-}
-/*
- * Instruction: BIT
- * Bit test, if one or more bits are set at a certain address
- * Function:	A & M
- * Flags out:	Z if(M = 0)
- * 				N = M & (1 << 7)
- * 				V = M & (1 << 6)
- */
-uint8_t CPU6502::BIT() {
-	fetch();
-	this->temp = this->a & this->fetched;
-	SetFlag(this->Z, (this->temp & 0x00FF) == 0x00);
-	SetFlag(this->N, (this->fetched & (1 << 7)));
-	SetFlag(this->V, (this->fetched & (1 << 6)));
-	return 0;
-}
-/*
- * Instruction:	BRK
- * Break instruction forces an interrupt instruction
- */
-uint8_t CPU6502::BRK() {
-	SetFlag(this->I, 1); // Going to do an interrupt right now
-
-	// Push the PC to the stack
-	write(this->STACKBASE + this->stkp, (pc >> 8) & 0x00FF);
-	--this->stkp;
-	write(this->STACKBASE + this->stkp, pc & 0x00FF);
-	--this->stkp;
-
-	// Push status register to the stack
-	SetFlag(this->B, 1); // Break has obviously set to one
-	write(this->STACKBASE + this->stkp, this->status);
-	--this->stkp;
-	SetFlag(this->B, 0); // Break is going to end // TODO: should this be at the end of the brk?
-
-	// Read new PC location from fixed address
-	uint16_t irqLo = read(this->IRQ_PC + 0); // 0xFFFE
-	uint16_t irqHi = read(this->IRQ_PC + 1); // 0xFFFF
-
-	this->pc = (irqHi << 8) | irqLo;
 	return 0;
 }
 /*
@@ -650,74 +686,6 @@ uint8_t CPU6502::CLV() {
 	SetFlag(V, false);
 	return 0;
 }
-/* Instruction: ADC
- * Addition with special attention to the C, Z, V, N Flags
- * Function:	A += M + C
- * Flags:		C if result is > 255
- * 				Z if result is 0
- * 				V if ~(A^M) & (A^R) // R -> Result
- * Flags base on the following hypothesis:
- * Pos + Pos = Neg -> Overflow
- * Neg + Neg = Pos -> Overflow
- * Pos + Neg = All -> cannot overflow
- * Pos + Pos = Pos -> No Overflow
- * Neg + Neg = Neg -> No Overflow
- */
-uint8_t CPU6502::ADC() {
-
-	this->fetch(); // grab the data we want to add
-
-	/*
-	 * The actual addition is performed in 16-Bit Words to capture
-	 * any set Carry Bit, which will be located in Bit 8 of the word.
-	 */
-	this->temp = (uint16_t)this->a + (uint16_t)this->fetched + (uint16_t)GetFlag(C);
-
-	SetFlag(C, this->temp > 255); // Set Carry Flag if high byte bit is 0
-
-	SetFlag(Z, (this->temp & 0x00FF) == 0); // Zero Flag if result is zero
-
-	/*
-	 * Overflow Flag is set accordingly to the methods description
-	 */
-	SetFlag(V, (~((uint16_t)this->a ^ (uint16_t)this->fetched) & ((uint16_t)this->a ^ (uint16_t)this->temp)) & 0x0080);
-
-	SetFlag(N, (this->temp & 0x0080)); // Negative Flag is set to the MSB of the result
-
-	this->a = this->temp & 0x00FF; // Put the result in the accumulator register
-
-	return 1; // This instruction has the potential to add an clock cycle
-}
-/*
- * Instruction SBC
- * Subtraction with special attention to the C, Z, V, N Flags
- * Function:		A -= M-(1 - C), A += -1(M-(1-C)), A += -M + 1 + C
- * Flags:			C, V, N, Z
- *
- * After reordering the mathematical function we end up with an addition with the data negated
- */
-uint8_t CPU6502::SBC() {
-	this->fetch();
-
-	uint16_t val = ((uint16_t)this->fetched) ^ 0x00FF; // Invert the bottom 8-Bits with xor
-
-	/*
-	 * From here on we do the same thing as in ADC
-	 */
-	this->temp = (uint16_t)this->a + val + (uint16_t)GetFlag(C);
-
-	SetFlag(C, this->temp > 255); // Set Carry Flag if high byte bit is 0
-
-	SetFlag(Z, (this->temp & 0x00FF) == 0); // Zero Flag if result is zero
-
-	SetFlag(V, (this->temp ^ (uint16_t)this->a) & (this->temp ^ val) & 0x0080);
-
-	SetFlag(N, this->temp & 0x0080);
-
-	this->a = this->temp & 0x00FF;
-
-	return 1;
-}
 /*
  * Instruction PHA
  * Push Accumulator to Stack
@@ -754,7 +722,7 @@ uint8_t CPU6502::PLA() {
 	return 0;
 }
 /*
- * Instruciton RTI
+ * Instruction RTI
  * Return from Interrupt
  * Reverse the Status of the CPU to what it was before the IRQ
  */
@@ -769,4 +737,34 @@ uint8_t CPU6502::RTI() {
 	++this->stkp;
 	this->pc |= (uint16_t)read((this->STACKBASE + this->stkp) << 8);
 	return 0;
+}
+/*
+ * Instruction SBC
+ * Subtraction with special attention to the C, Z, V, N Flags
+ * Function:		A -= M-(1 - C), A += -1(M-(1-C)), A += -M + 1 + C
+ * Flags:			C, V, N, Z
+ *
+ * After reordering the mathematical function we end up with an addition with the data negated
+ */
+uint8_t CPU6502::SBC() {
+	this->fetch();
+
+	uint16_t val = ((uint16_t)this->fetched) ^ 0x00FF; // Invert the bottom 8-Bits with xor
+
+	/*
+	 * From here on we do the same thing as in ADC
+	 */
+	this->temp = (uint16_t)this->a + val + (uint16_t)GetFlag(C);
+
+	SetFlag(C, this->temp > 255); // Set Carry Flag if high byte bit is 0
+
+	SetFlag(Z, (this->temp & 0x00FF) == 0); // Zero Flag if result is zero
+
+	SetFlag(V, (this->temp ^ (uint16_t)this->a) & (this->temp ^ val) & 0x0080);
+
+	SetFlag(N, this->temp & 0x0080);
+
+	this->a = this->temp & 0x00FF;
+
+	return 1;
 }
