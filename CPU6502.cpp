@@ -763,6 +763,18 @@ uint8_t CPU6502::DEY() {
 	SetFlag(this->N, this->y & 0x80);
 	return 0;
 }
+/* Instruction: EOR
+ * Bitwise logic exclusive OR
+ * Function:	A = A ^ M
+ * Flags out:	N, Z
+ */
+uint8_t CPU6502::EOR() {
+	this->fetch();
+	this->a = this->a ^ this->fetched;
+	SetFlag(this->Z, this->a = 0x00);
+	SetFlag(this->N, this->a & 0x80);
+	return 1;
+}
 /*
  * Instruction PHA
  * Push Accumulator to Stack
