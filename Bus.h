@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <array>
 #include "CPU6502.h"
+#include "PPU2C02.h"
 
 
 class Bus {
@@ -15,7 +16,8 @@ public:
 	virtual ~Bus();
 
 public: // Devices on the BUS
-	CPU6502 cpu;
+	CPU6502 cpu; // the cpu
+	PPU2C02 ppu; // the ppu
 
 	// fake RAM to use temporarily
 	std::array<uint8_t, 2048> cpuRam;
