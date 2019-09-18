@@ -50,7 +50,6 @@ class Demo_olc6502 : public olc::PixelGameEngine
 {
 public:
 	Demo_olc6502() { sAppName = "6502 CPU Demonstration"; }
-	virtual ~Demo_olc6502();
 
 	Bus nes;
 	std::map<uint16_t, std::string> mapAsm;
