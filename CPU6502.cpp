@@ -263,7 +263,7 @@ uint8_t CPU6502::IMP() {
  * next byte
  */
 uint8_t CPU6502::IMM(){
-	this->addr_abs = ++this->pc;
+	this->addr_abs = this->pc++;
 	return 0;
 }
 // Next 3 address modes use indirection (aka Pointers)
