@@ -15,7 +15,7 @@ Bus::~Bus() {
 	// TODO Auto-generated destructor stub
 }
 
-void Bus::write(uint16_t addr, uint8_t data) {
+void Bus::cpuWrite(uint16_t addr, uint8_t data) {
 
 	// check if address is in the correct range (the complete range for now)
 	if(addr >= 0x000 && addr <=0xFFFF) {

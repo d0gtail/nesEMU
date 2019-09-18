@@ -25,8 +25,8 @@ public: // BUS read / write
 	/**
 	 * no need to specify if we read or write to the BUS since it's implied by which of the methods one is calling
 	 */
-	void write(uint16_t addr, uint8_t data); // writes DATA to ADDRESS
-	uint8_t read(uint16_t addr, bool bReadOnly = false); // reads DATA from ADDRESS
+	void cpuWrite(uint16_t addr, uint8_t data); // writes DATA to ADDRESS
+	uint8_t cpuRead(uint16_t addr, bool bReadOnly = false); // reads DATA from ADDRESS
 };
 
 #endif /* BUS_H_ */

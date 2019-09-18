@@ -41,7 +41,7 @@ CPU6502::~CPU6502() {
 }
 
 void CPU6502::write(uint16_t addr, uint8_t data) {
-	bus->write(addr, data);
+	bus->cpuWrite(addr, data);
 }
 
 uint8_t CPU6502::read(uint16_t addr) {
