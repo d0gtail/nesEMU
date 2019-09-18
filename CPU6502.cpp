@@ -1096,3 +1096,28 @@ uint8_t CPU6502::SEI() {
 	SetFlag(this->I, 1);
 	return 0;
 }
+/* Instruction STA
+ * Store Accumulator Register
+ * Function:	M = A
+ */
+uint8_t CPU6502::STA() {
+	write(this->addr_abs, this->a);
+	return 0;
+}
+/* Instruction STX
+ * Store X Register
+ * Function:	M = X
+ */
+uint8_t CPU6502::STX() {
+	write(this->addr_abs, this->x);
+	return 0;
+}
+/* Instruction STY
+ * Store Y Register
+ * Function:	M = Y
+ */
+uint8_t CPU6502::STY() {
+	write(this->addr_abs, this->y);
+	return 0;
+}
+
