@@ -1,9 +1,3 @@
-/*
- * CPU6502.h
- *
- *  Created on: 26.08.2019
- *      Author: holger
- */
 
 #ifndef CPU6502_H_
 #define CPU6502_H_
@@ -13,6 +7,8 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+// map is needed for disassembling test
+#include <map>
 
 class Bus;
 
@@ -39,6 +35,9 @@ public:
 
 	/*
 	 * CPU Core Registers exposed to public for easy access
+	 * Be aware these can be totally random in real world environment
+	 * due to state of the cpu at startup. TODO: Maybe emulate some
+	 * randomness in the future?
 	 */
 	uint8_t status = 0x00; 	// Status Register
 	uint8_t a = 0x00;		// Accumulator Register
@@ -55,13 +54,46 @@ public:
 	void nmi();		// Non-Maskable Interrupt Request - as IRQ but can't be disabled
 	void clock();	// perform one clock cycle
 
+	/*
+	 * Indicates the current instruction has completed by returning true. This is
+	 * a utility function to enable "step-by-step" execution, without manually
+	 * clocking every cycle
+	 */
+	bool complete();
+	/*
+	 * Produces a map of strings, with keys equivalent to instruction start locations
+	 * in memory, for the specified address range
+	 */
+	std::map<uint16_t, std::string> disassemble(uint16_t nStart, uint16_t nStop);
 
 
 private:
+	/*
+	 * Connection to the BUS
+	 */
 	Bus *bus = nullptr;
 
 	void write(uint16_t addr, uint8_t data);
 	uint8_t read(uint16_t addr);
+
+	// convenience methods to access status register
+	uint8_t GetFlag(FLAGS6502 f);
+	void	SetFlag(FLAGS6502 f, bool v);
+
+	// Base location of the STACK hard coded in the CPU = 0x0100
+	uint16_t const STACKBASE = 0x0100;
+
+	// Location to read the actual PC address from during a CPU Reset
+	uint16_t const RESET_PC = 0xFFFC;
+
+	// Address for the Stackpointer during a CPU Reset
+	uint8_t const RESET_STKP = 0xFD;
+
+	// Address for PC during an IRQ
+	uint16_t const IRQ_PC = 0xFFFE;
+
+	// Addres for PC during NMI
+	uint16_t const NMI_PC = 0xFFFA;
 
 	/*
 <<<<<<< HEAD
@@ -134,11 +166,6 @@ private:
 	uint8_t TYA();
 
 	uint8_t XXX(); // illegal opcode
-
-private:
-	// convenience methods to access status register
-	uint8_t GetFlag(FLAGS6502 f);
-	void	SetFlag(FLAGS6502 f, bool v);
 };
 
 #endif /* CPU6502_H_ */
