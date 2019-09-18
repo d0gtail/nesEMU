@@ -977,16 +977,32 @@ uint8_t CPU6502::PLP() {
 }
 /* Instruction ROL
  * Rotate Left
- * Function:	A << 1 | M << 1
- * Flags out:	C = temp & 0x0001
- * 				Z = A == 0
- * 				N = M & 0x0001
+ * Function:	A << 1 or M << 1
+ * Flags out:	C, Z, N
  */
 uint8_t CPU6502::ROL() {
 	this->fetch();
 	this->temp = (uint16_t)(this->fetched << 1) | GetFlag(this->C);
 	SetFlag(this->C, this->temp & 0xFF00);
 	SetFlag(this->Z, (this->temp & 0x00FF) == 0x0000);
+	SetFlag(this->N, this->temp & 0x0080);
+	if(lookup[this->opcode].addrmode == &CPU6502::IMP) {
+		this->a = this->temp & 0x00FF;
+	}else{
+		write(this->addr_abs, this->temp & 0x00FF);
+	}
+	return 0;
+}
+/* Instruction ROR
+ * Rotate Right
+ * Function:	A >> 1 or M >> 1
+ * Flags out:	C, Z, N
+ */
+uint8_t CPU6502::ROR() {
+	this->fetch();
+	this->temp = (uint16_t)(GetFlag(this->C) << 7 ) | (this->fetched >> 1);
+	SetFlag(this->C, this->fetched & 0x01);
+	SetFlag(this->Z, (this->temp & 0x00FF) == 0x00);
 	SetFlag(this->N, this->temp & 0x0080);
 	if(lookup[this->opcode].addrmode == &CPU6502::IMP) {
 		this->a = this->temp & 0x00FF;
@@ -1010,6 +1026,19 @@ uint8_t CPU6502::RTI() {
 	this->pc = (uint16_t)read(this->STACKBASE + this->stkp);
 	++this->stkp;
 	this->pc |= (uint16_t)read((this->STACKBASE + this->stkp) << 8);
+	return 0;
+}
+/* Instruction RTS
+ * Return from Subroutine
+ * Is used at the end of a subroutine
+ * Function:	pc <- stack
+ */
+uint8_t CPU6502::RTS() {
+	++this->stkp;
+	this->pc = (uint16_t)read(this->STACKBASE + this->stkp);
+	++this->stkp;
+	this->pc |= (uint16_t)read((this->STACKBASE + this->stkp) << 8);
+	++this->pc;
 	return 0;
 }
 /*
