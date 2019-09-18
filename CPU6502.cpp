@@ -1,9 +1,3 @@
-/*
- * CPU6502.cpp
- *
- *  Created on: 26.08.2019
- *      Author: holger
- */
 
 #include "CPU6502.h"
 #include "Bus.h"

@@ -1,9 +1,3 @@
-/*
- * CPU6502.h
- *
- *  Created on: 26.08.2019
- *      Author: holger
- */
 
 #ifndef CPU6502_H_
 #define CPU6502_H_
