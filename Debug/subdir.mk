@@ -6,16 +6,22 @@
 CPP_SRCS += \
 ../Bus.cpp \
 ../CPU6502.cpp \
+../Cartridge.cpp \
+../PPU2C02.cpp \
 ../main.cpp 
 
 OBJS += \
 ./Bus.o \
 ./CPU6502.o \
+./Cartridge.o \
+./PPU2C02.o \
 ./main.o 
 
 CPP_DEPS += \
 ./Bus.d \
 ./CPU6502.d \
+./Cartridge.d \
+./PPU2C02.d \
 ./main.d 
 
 

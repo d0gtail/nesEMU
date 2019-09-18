@@ -22,7 +22,7 @@ void Bus::cpuWrite(uint16_t addr, uint8_t data) {
 		cpuRam[addr] = data;
 	}
 }
-uint8_t Bus::read(uint16_t addr, bool bReadOnly) {
+uint8_t Bus::cpuRead(uint16_t addr, bool bReadOnly) {
 
 	// check if address is in the correct range (the complete range for now)
 	if(addr >= 0x000 && addr <=0xFFFF) {
