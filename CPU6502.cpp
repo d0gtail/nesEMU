@@ -1071,3 +1071,28 @@ uint8_t CPU6502::SBC() {
 
 	return 1;
 }
+/* Instruction SEC
+ * Set Carry Flag
+ * Function:	C = 1
+ *
+ */
+uint8_t CPU6502::SEC() {
+	SetFlag(this->C, 1);
+	return 0;
+}
+/* Instruction SED
+ * Set Decimal Flag
+ * Function:	D = 1
+ */
+uint8_t CPU6502::SED() {
+	SetFlag(this->D, 1);
+	return 0;
+}
+/* Instruction SEI
+ * Set Interrupt Disable Flag
+ * Function:	I = 1
+ */
+uint8_t CPU6502::SEI() {
+	SetFlag(this->I, 1);
+	return 0;
+}
