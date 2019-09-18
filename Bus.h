@@ -18,8 +18,7 @@ public: // Devices on the BUS
 	CPU6502 cpu;
 
 	// fake RAM to use temporarily
-	// TODO: change with real RAM
-	std::array<uint8_t, 64 * 1024> ram;
+	std::array<uint8_t, 2048> cpuRam;
 
 public: // BUS read / write
 	/**
