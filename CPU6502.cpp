@@ -1120,4 +1120,66 @@ uint8_t CPU6502::STY() {
 	write(this->addr_abs, this->y);
 	return 0;
 }
-
+/* Instruction TAX
+ * Transfer Accumulator to X Register
+ * Function:	X = A
+ * Flags out:	N, Z
+ */
+uint8_t CPU6502::TAX() {
+	this->x = this->a;
+	SetFlag(this->Z, this->x == 0x00);
+	SetFlag(this->N, this->x & 0x80);
+	return 0;
+}
+/* Instruction TAY
+ * Transfer Accumulator to Y Register
+ * Function:	Y = A
+ * Flags out:	N, Z
+ */
+uint8_t CPU6502::TAY() {
+	this->y = this->a;
+	SetFlag(this->Z, this->y == 0x00);
+	SetFlag(this->N, this->y & 0x80);
+	return 0;
+}
+/* Instruction TSX
+ * Transfer Stack Pointer to X Register
+ * Function:	X = stkp
+ * Flags out:	N, Z
+ */
+uint8_t CPU6502::TSX() {
+	this->x = this->stkp;
+	SetFlag(this->Z, this->x == 0x00);
+	SetFlag(this->N, this->x & 0x80);
+	return 0;
+}
+/* Instruction TXA
+ * Transfer X to Accumulator Register
+ * Function:	A = X
+ * Flags out:	N, Z
+ */
+uint8_t CPU6502::TXA() {
+	this->a = this->x;
+	SetFlag(this->Z, this->a == 0x00);
+	SetFlag(this->N, this->a & 0x80);
+	return 0;
+}
+/* Instruction TXS
+ * Transfer X to Stack Pointer
+ * Function:	stkp = X
+ */
+uint8_t CPU6502::TXS() {
+	this->stkp = this->x;
+	return 0;
+}
+/* Instruction TYA
+ * Transfer Y to Accumulator Register
+ * Function:	Y = A
+ * Flags out:	N, Z
+ */
+uint8_t CPU6502::TYA() {
+	this->a = this->y;
+	SetFlag(this->Z, this->a == 0x00);
+	SetFlag(this->N, this->a & 0x80);
+	return 0;
+}
