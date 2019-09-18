@@ -710,7 +710,7 @@ uint8_t CPU6502::CPX() {
 	this->fetch();
 	this->temp = (uint16_t)this->x - (uint16_t)this->fetched;
 	SetFlag(this->C, this->x >= this->fetched);
-	SetFlag(this->Z, (this->temp & 0x00FF) = 0x000);
+	SetFlag(this->Z, (this->temp & 0x00FF) == 0x0000);
 	SetFlag(this->N, this->temp & 0x0080);
 	return 0;
 }
@@ -723,7 +723,7 @@ uint8_t CPU6502::CPY() {
 	this->fetch();
 	this->temp = (uint16_t)this->y - (uint16_t)this->fetched;
 	SetFlag(this->C, this->y >= this->fetched);
-	SetFlag(this->Z, (this->temp & 0x00FF) = 0x0000);
+	SetFlag(this->Z, (this->temp & 0x00FF) == 0x0000);
 	SetFlag(this->N, this->temp & 0x0080);
 	return 0;
 }
@@ -771,7 +771,7 @@ uint8_t CPU6502::DEY() {
 uint8_t CPU6502::EOR() {
 	this->fetch();
 	this->a = this->a ^ this->fetched;
-	SetFlag(this->Z, this->a = 0x00);
+	SetFlag(this->Z, this->a == 0x00);
 	SetFlag(this->N, this->a & 0x80);
 	return 1;
 }
@@ -880,7 +880,7 @@ uint8_t CPU6502::LSR() {
 	SetFlag(C, this->fetched & 0x0001);
 	this->temp = this->fetched >> 1;
 	SetFlag(this->Z, (this->temp & 0x00FF) == 0x0000);
-	SetFlag(this->N, this-temp & 0x0080);
+	SetFlag(this->N, this->temp & 0x0080);
 	if(lookup[this->opcode].addrmode == &CPU6502::IMP) {
 		this->a = (this->temp & 0x00FF);
 	}else{
@@ -1181,5 +1181,11 @@ uint8_t CPU6502::TYA() {
 	this->a = this->y;
 	SetFlag(this->Z, this->a == 0x00);
 	SetFlag(this->N, this->a & 0x80);
+	return 0;
+}
+/* Instruction XXX
+ * Catch illegal instructions
+ */
+uint8_t CPU6502::XXX() {
 	return 0;
 }
